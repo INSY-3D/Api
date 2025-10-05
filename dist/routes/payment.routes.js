@@ -1,0 +1,21 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const payment_controller_1 = require("@/controllers/payment.controller");
+const auth_middleware_1 = require("@/middleware/auth.middleware");
+const validation_middleware_1 = require("@/middleware/validation.middleware");
+const payment_validators_1 = require("@/validators/payment.validators");
+const router = (0, express_1.Router)();
+router.post('/', auth_middleware_1.authenticateToken, auth_middleware_1.requireCustomer, (0, validation_middleware_1.validateRequest)(payment_validators_1.createPaymentSchema), payment_controller_1.paymentController.createPayment.bind(payment_controller_1.paymentController));
+router.get('/', auth_middleware_1.authenticateToken, auth_middleware_1.requireCustomer, payment_controller_1.paymentController.getUserPayments.bind(payment_controller_1.paymentController));
+router.get('/staff/queue', auth_middleware_1.authenticateToken, payment_controller_1.paymentController.getStaffQueue.bind(payment_controller_1.paymentController));
+router.get('/staff/verified', auth_middleware_1.authenticateToken, payment_controller_1.paymentController.getStaffVerified.bind(payment_controller_1.paymentController));
+router.get('/staff/swift', auth_middleware_1.authenticateToken, payment_controller_1.paymentController.getStaffSwift.bind(payment_controller_1.paymentController));
+router.get('/:id', auth_middleware_1.authenticateToken, auth_middleware_1.requireCustomer, payment_controller_1.paymentController.getPaymentById.bind(payment_controller_1.paymentController));
+router.put('/:id/beneficiary', auth_middleware_1.authenticateToken, auth_middleware_1.requireCustomer, (0, validation_middleware_1.validateRequest)(payment_validators_1.updateBeneficiarySchema), payment_controller_1.paymentController.updateBeneficiary.bind(payment_controller_1.paymentController));
+router.post('/:id/submit', auth_middleware_1.authenticateToken, auth_middleware_1.requireCustomer, (0, validation_middleware_1.validateRequest)(payment_validators_1.submitPaymentSchema), payment_controller_1.paymentController.submitPayment.bind(payment_controller_1.paymentController));
+router.post('/:id/verify', auth_middleware_1.authenticateToken, payment_controller_1.paymentController.verifyPayment.bind(payment_controller_1.paymentController));
+router.post('/:id/submit-swift', auth_middleware_1.authenticateToken, payment_controller_1.paymentController.submitToSwift.bind(payment_controller_1.paymentController));
+router.delete('/:id', auth_middleware_1.authenticateToken, auth_middleware_1.requireCustomer, payment_controller_1.paymentController.deleteDraftPayment.bind(payment_controller_1.paymentController));
+exports.default = router;
+//# sourceMappingURL=payment.routes.js.map

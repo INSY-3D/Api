@@ -1,0 +1,202 @@
+// NexusPay Database Schema - Task 2 Compliant
+// PostgreSQL with encryption at rest and PII field-level encryption
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./nexuspay.db"
+}
+
+// User model with encrypted PII fields
+model User {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Encrypted PII fields (Task 2 Requirement)
+  fullNameEncrypted     String
+  saIdEncrypted         String
+  accountNumberEncrypted String
+  emailEncrypted        String?
+
+  // Non-PII fields
+  passwordHash      String
+  role              String   @default("customer")
+  isActive          Boolean  @default(true)
+  failedLoginAttempts Int   @default(0)
+  lockedUntil       DateTime?
+
+  // Navigation properties
+  sessions      UserSession[]
+  payments      Payment[]
+  securityEvents SecurityEvent[]
+  verifiedPayments Payment[] @relation("StaffVerifier")
+  beneficiaries Beneficiary[]
+
+  @@map("users")
+}
+
+// User session management
+model UserSession {
+  id               String   @id @default(cuid())
+  userId           String
+  refreshTokenHash String
+  deviceInfo       String?
+  ipAddress        String?
+  userAgent        String?
+  isActive         Boolean  @default(true)
+  expiresAt        DateTime
+  createdAt        DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_sessions")
+}
+
+// CSRF token management
+model CsrfToken {
+  token     String   @id
+  userId    String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@map("csrf_tokens")
+}
+
+// Login attempt tracking
+model LoginAttempt {
+  id           Int      @id @default(autoincrement())
+  identifier   String
+  ipAddress    String
+  userAgent    String?
+  success      Boolean
+  failureReason String?
+  createdAt    DateTime @default(now())
+
+  @@map("login_attempts")
+}
+
+// Security event logging
+model SecurityEvent {
+  id          Int      @id @default(autoincrement())
+  userId      String?
+  eventType   String
+  description String
+  ipAddress   String?
+  userAgent   String?
+  metadata    String?  // JSON string for additional data
+  createdAt   DateTime @default(now())
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("security_events")
+}
+
+// Immutable audit entries (Task 2 Requirement)
+model ImmutableAuditEntry {
+  id             String   @id @default(cuid())
+  sequenceNumber Int      @unique
+  userId         String?
+  eventType      String
+  eventData      String
+  entityId       String?
+  entityType     String?
+  ipAddress      String?
+  userAgent      String?
+  riskLevel      String
+  hash           String
+  previousHash   String?
+  metadata       String?  // JSON string
+  timestamp      DateTime @default(now())
+
+  @@map("immutable_audit_entries")
+}
+
+// Payment model
+model Payment {
+  id        String   @id @default(cuid())
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Payment details
+  amount    Float
+  currency  String
+  provider  String   @default("SWIFT")
+  idempotencyKey String @unique
+
+  // Optional fields for DRAFT status
+  reference String?
+  purpose   String?
+
+  // Beneficiary details
+  beneficiaryName         String?
+  beneficiaryBank         String?
+  swiftCode              String?
+  beneficiaryAccountNumber String?
+  iban                   String?
+  bankAddress            String?
+  bankCity               String?
+  bankPostalCode         String?
+  bankCountry            String?
+
+  // Status and workflow
+  status            String   @default("draft")
+  staffVerifiedBy   String?
+  staffVerifiedAt   DateTime?
+  submittedToSwiftAt DateTime?
+  completedAt       DateTime?
+
+  // Relations
+  user        User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  staffVerifier User? @relation("StaffVerifier", fields: [staffVerifiedBy], references: [id], onDelete: SetNull)
+
+  @@map("payments")
+}
+
+// Beneficiary model
+model Beneficiary {
+  id            String   @id @default(cuid())
+  userId        String
+  fullName      String
+  bankName      String
+  accountNumber String
+  swiftCode     String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("beneficiaries")
+}
+
+// Performance metrics
+model PerformanceMetric {
+  id          Int      @id @default(autoincrement())
+  endpoint    String
+  method      String
+  responseTime Int
+  statusCode  Int
+  timestamp   DateTime @default(now())
+
+  @@map("performance_metrics")
+}
+
+// System health checks
+model HealthCheck {
+  id        Int      @id @default(autoincrement())
+  service   String
+  status    String
+  responseTime Int?
+  error     String?
+  timestamp DateTime @default(now())
+
+  @@map("health_checks")
+}
