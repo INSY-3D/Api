@@ -40,11 +40,12 @@ async function seed() {
 
     for (const userData of demoUsers) {
       // Check if user already exists
+      // Existing check needs to compare decrypted values; use plain-string fallback check first
       const existingUser = await prisma.user.findFirst({
         where: {
           OR: [
-            { saIdEncrypted: userData.saId },
-            { accountNumberEncrypted: userData.accountNumber },
+            { emailEncrypted: userData.email }, // legacy plain value
+            { accountNumberEncrypted: userData.accountNumber }, // legacy plain value
           ],
         },
       });
@@ -80,9 +81,7 @@ async function seed() {
     }
 
     // Create some sample payments
-    const testUser = await prisma.user.findFirst({
-      where: { emailEncrypted: 'test@nexuspay.dev' },
-    });
+    const testUser = await prisma.user.findFirst();
 
     if (testUser) {
       // Create sample DRAFT payment

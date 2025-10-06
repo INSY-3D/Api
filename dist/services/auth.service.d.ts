@@ -1,6 +1,7 @@
 import { User, UserSession } from '@prisma/client';
 import { JWTPayload, CreateUserDto, LoginDto, AuthResponse } from '@/types';
 export declare class AuthService {
+    private tryDecrypt;
     hashPassword(password: string): Promise<string>;
     verifyPassword(password: string, hashedPassword: string): Promise<boolean>;
     generateAccessToken(user: User, sessionId: string): string;

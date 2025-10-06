@@ -298,7 +298,7 @@ export class PaymentService {
         }),
       ]);
 
-      const paymentDtos = await Promise.all(payments.map(payment => this.mapPaymentToDto(payment)));
+      const paymentDtos = await Promise.all(payments.map(payment => this.mapPaymentToDto(payment, true)));
 
       const pagination: PaginationDto = {
         page,
@@ -439,14 +439,21 @@ export class PaymentService {
     return errors;
   }
 
-  private async mapPaymentToDto(payment: Payment & { user?: { fullNameEncrypted?: string; emailEncrypted?: string | null } }): Promise<PaymentDto> {
+  private async mapPaymentToDto(
+    payment: Payment & { user?: { fullNameEncrypted?: string; emailEncrypted?: string | null } },
+    showSensitive: boolean = false
+  ): Promise<PaymentDto> {
     // Decrypt customer information if available
     let customerName: string | undefined;
     let customerEmail: string | undefined;
 
     if (payment.user?.fullNameEncrypted) {
       try {
-        customerName = await encryptionService.decrypt(JSON.parse(payment.user.fullNameEncrypted));
+        try {
+          customerName = await encryptionService.decrypt(JSON.parse(payment.user.fullNameEncrypted));
+        } catch {
+          customerName = payment.user.fullNameEncrypted as any;
+        }
       } catch (error) {
         logger.warn('Failed to decrypt customer name', { paymentId: payment.id, error });
       }
@@ -454,7 +461,11 @@ export class PaymentService {
 
     if (payment.user?.emailEncrypted) {
       try {
-        customerEmail = await encryptionService.decrypt(JSON.parse(payment.user.emailEncrypted));
+        try {
+          customerEmail = await encryptionService.decrypt(JSON.parse(payment.user.emailEncrypted));
+        } catch {
+          customerEmail = payment.user.emailEncrypted as any;
+        }
       } catch (error) {
         logger.warn('Failed to decrypt customer email', { paymentId: payment.id, error });
       }
@@ -470,7 +481,7 @@ export class PaymentService {
       beneficiaryBank: payment.beneficiaryBank || undefined,
       swiftCode: payment.swiftCode || undefined,
       accountNumber: payment.beneficiaryAccountNumber ? 
-        maskAccountNumber(payment.beneficiaryAccountNumber) : undefined,
+        (showSensitive ? payment.beneficiaryAccountNumber : maskAccountNumber(payment.beneficiaryAccountNumber)) : undefined,
       iban: payment.iban || undefined,
       status: payment.status,
       createdAt: payment.createdAt,
@@ -540,7 +551,7 @@ export class PaymentService {
         }),
       ]);
 
-      const paymentDtos = await Promise.all(payments.map(payment => this.mapPaymentToDto(payment)));
+      const paymentDtos = await Promise.all(payments.map(payment => this.mapPaymentToDto(payment, true)));
 
       const pagination: PaginationDto = {
         page,
@@ -595,7 +606,7 @@ export class PaymentService {
         }),
       ]);
 
-      const paymentDtos = await Promise.all(payments.map(payment => this.mapPaymentToDto(payment)));
+      const paymentDtos = await Promise.all(payments.map(payment => this.mapPaymentToDto(payment, true)));
 
       const pagination: PaginationDto = {
         page,
@@ -735,7 +746,7 @@ export class PaymentService {
         }
       );
 
-      return await this.mapPaymentToDto(updatedPayment);
+      return await this.mapPaymentToDto(updatedPayment, true);
     } catch (error) {
       logger.error('Payment verification failed', { error });
       throw error;
@@ -803,7 +814,7 @@ export class PaymentService {
         }
       );
 
-      return await this.mapPaymentToDto(updatedPayment);
+      return await this.mapPaymentToDto(updatedPayment, true);
     } catch (error) {
       logger.error('SWIFT submission failed', { error });
       throw error;

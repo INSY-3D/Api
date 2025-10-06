@@ -25,7 +25,7 @@ A secure, enterprise-grade Node.js API for international payments with full Task
 
 ### Architecture
 - 🏗️ TypeScript with strict type checking
-- 🗄️ PostgreSQL with Prisma ORM
+- 🗄️ Prisma ORM with SQLite (dev) and Postgres/MySQL ready (prod)
 - 📝 Comprehensive logging with Winston
 - 🔄 Graceful error handling
 - 📈 Performance monitoring
@@ -33,9 +33,9 @@ A secure, enterprise-grade Node.js API for international payments with full Task
 
 ## 📋 Prerequisites
 
-- Node.js 18+ 
-- PostgreSQL 13+
+- Node.js 18+
 - npm 8+
+- SQLite (dev) or a PostgreSQL/MySQL instance (prod)
 
 ## 🛠️ Installation
 
@@ -61,8 +61,8 @@ A secure, enterprise-grade Node.js API for international payments with full Task
    # Generate Prisma client
    npm run db:generate
    
-   # Run database migrations
-   npm run db:migrate
+  # Create/Reset dev DB and apply schema (SQLite)
+  npm run db:reset
    
    # Seed the database (optional)
    npm run db:seed
@@ -90,8 +90,8 @@ NODE_ENV=development
 PORT=5118
 HOST=localhost
 
-# Database
-DATABASE_URL="postgresql://user:password@localhost:5432/nexuspay"
+# Database (SQLite for development)
+DATABASE_URL="file:./nexuspay.db"
 
 # JWT
 JWT_SECRET="your-super-secure-jwt-secret-key-here-minimum-32-characters"
@@ -164,6 +164,8 @@ Content-Type: application/json
   "amount": "1000.00",
   "currency": "USD",
   "provider": "SWIFT",
+  "reference": "Optional reference up to 35 chars",
+  "purpose": "Optional purpose up to 140 chars",
   "idempotencyKey": "unique-key-123"
 }
 ```
@@ -192,9 +194,63 @@ Authorization: Bearer <token>
 Content-Type: application/json
 
 {
-  "reference": "PAY-2025-001",
-  "purpose": "Business payment"
+  "reference": "PAY-2025-001"?,
+  "purpose": "Business payment"?
 }
+```
+
+#### Staff Queue (Pending Verification)
+```http
+GET /api/v1/payments/staff/queue?page=1&limit=20
+Authorization: Bearer <token>
+```
+
+#### Staff Verified (Ready for SWIFT)
+```http
+GET /api/v1/payments/staff/verified?page=1&limit=20
+Authorization: Bearer <token>
+```
+
+#### Staff Submitted to SWIFT
+```http
+GET /api/v1/payments/staff/swift?page=1&limit=20
+Authorization: Bearer <token>
+```
+
+#### Verify/Reject a Payment
+```http
+POST /api/v1/payments/{id}/verify
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{ "action": "approve" | "reject" }
+```
+
+#### Submit a Payment to SWIFT
+```http
+POST /api/v1/payments/{id}/submit-swift
+Authorization: Bearer <token>
+```
+
+### Beneficiaries Endpoints (CRUD)
+
+#### List
+```http
+GET /api/v1/beneficiaries
+Authorization: Bearer <token>
+```
+
+#### Create
+```http
+POST /api/v1/beneficiaries
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+#### Delete
+```http
+DELETE /api/v1/beneficiaries/{id}
+Authorization: Bearer <token>
 ```
 
 ## 🔒 Security Features
@@ -274,7 +330,6 @@ src/
 ├── config/          # Configuration files
 ├── controllers/     # Request handlers
 ├── middleware/      # Express middleware
-├── models/          # Database models
 ├── routes/          # API routes
 ├── services/        # Business logic
 ├── types/           # TypeScript types
@@ -315,3 +370,12 @@ For support and questions:
 - Full payment workflow
 - Security features
 - SWIFT integration ready
+
+### v1.1.0
+- Fixed AES-GCM nonce usage in DEK decryption
+- Resolved JWT issuer conflict (payload `iss` only; no `issuer` option)
+- Added staff endpoints: queue, verified, submitted to SWIFT, verify action
+- Implemented Beneficiaries CRUD endpoints
+- Aligned SWIFT/BIC and IBAN validation with frontend
+- Added `reference` and `purpose` support on drafts and submission
+- Included `customerName`/`customerEmail` in payment DTOs for staff views

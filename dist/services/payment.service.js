@@ -194,7 +194,7 @@ class PaymentService {
                     where: { userId: user.id },
                 }),
             ]);
-            const paymentDtos = await Promise.all(payments.map(payment => this.mapPaymentToDto(payment)));
+            const paymentDtos = await Promise.all(payments.map(payment => this.mapPaymentToDto(payment, true)));
             const pagination = {
                 page,
                 limit: maxLimit,
@@ -301,12 +301,17 @@ class PaymentService {
         }
         return errors;
     }
-    async mapPaymentToDto(payment) {
+    async mapPaymentToDto(payment, showSensitive = false) {
         let customerName;
         let customerEmail;
         if (payment.user?.fullNameEncrypted) {
             try {
-                customerName = await encryption_service_1.encryptionService.decrypt(JSON.parse(payment.user.fullNameEncrypted));
+                try {
+                    customerName = await encryption_service_1.encryptionService.decrypt(JSON.parse(payment.user.fullNameEncrypted));
+                }
+                catch {
+                    customerName = payment.user.fullNameEncrypted;
+                }
             }
             catch (error) {
                 logger_1.logger.warn('Failed to decrypt customer name', { paymentId: payment.id, error });
@@ -314,7 +319,12 @@ class PaymentService {
         }
         if (payment.user?.emailEncrypted) {
             try {
-                customerEmail = await encryption_service_1.encryptionService.decrypt(JSON.parse(payment.user.emailEncrypted));
+                try {
+                    customerEmail = await encryption_service_1.encryptionService.decrypt(JSON.parse(payment.user.emailEncrypted));
+                }
+                catch {
+                    customerEmail = payment.user.emailEncrypted;
+                }
             }
             catch (error) {
                 logger_1.logger.warn('Failed to decrypt customer email', { paymentId: payment.id, error });
@@ -330,7 +340,7 @@ class PaymentService {
             beneficiaryBank: payment.beneficiaryBank || undefined,
             swiftCode: payment.swiftCode || undefined,
             accountNumber: payment.beneficiaryAccountNumber ?
-                (0, validation_1.maskAccountNumber)(payment.beneficiaryAccountNumber) : undefined,
+                (showSensitive ? payment.beneficiaryAccountNumber : (0, validation_1.maskAccountNumber)(payment.beneficiaryAccountNumber)) : undefined,
             iban: payment.iban || undefined,
             status: payment.status,
             createdAt: payment.createdAt,
@@ -385,7 +395,7 @@ class PaymentService {
                     },
                 }),
             ]);
-            const paymentDtos = await Promise.all(payments.map(payment => this.mapPaymentToDto(payment)));
+            const paymentDtos = await Promise.all(payments.map(payment => this.mapPaymentToDto(payment, true)));
             const pagination = {
                 page,
                 limit: maxLimit,
@@ -430,7 +440,7 @@ class PaymentService {
                     },
                 }),
             ]);
-            const paymentDtos = await Promise.all(payments.map(payment => this.mapPaymentToDto(payment)));
+            const paymentDtos = await Promise.all(payments.map(payment => this.mapPaymentToDto(payment, true)));
             const pagination = {
                 page,
                 limit: maxLimit,
@@ -537,7 +547,7 @@ class PaymentService {
                 previousStatus: payment.status,
                 newStatus,
             });
-            return await this.mapPaymentToDto(updatedPayment);
+            return await this.mapPaymentToDto(updatedPayment, true);
         }
         catch (error) {
             logger_1.logger.error('Payment verification failed', { error });
@@ -586,7 +596,7 @@ class PaymentService {
                 previousStatus: payment.status,
                 newStatus: enums_1.PaymentStatus.SUBMITTED_TO_SWIFT,
             });
-            return await this.mapPaymentToDto(updatedPayment);
+            return await this.mapPaymentToDto(updatedPayment, true);
         }
         catch (error) {
             logger_1.logger.error('SWIFT submission failed', { error });

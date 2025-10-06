@@ -31,6 +31,17 @@ import { UserRole, EventType, SecurityRiskLevel } from '@/types/enums';
 
 // Task 2 Compliant: Argon2id password hashing service
 export class AuthService {
+  private async tryDecrypt(possiblyEncrypted: string | null): Promise<string | null> {
+    if (!possiblyEncrypted) return null;
+    try {
+      // Attempt to parse as EncryptedData JSON and decrypt
+      const parsed = JSON.parse(possiblyEncrypted);
+      return await encryptionService.decrypt(parsed);
+    } catch {
+      // Fallback: treat as plain text already
+      return possiblyEncrypted;
+    }
+  }
   /**
    * Hash password using Argon2id (Task 2 Requirement)
    */
@@ -260,8 +271,7 @@ export class AuthService {
 
       // Check for MFA requirement (simplified for demo)
       const demoEmails = ['test@nexuspay.dev', 'staff@nexuspay.dev', 'admin@nexuspay.dev'];
-      const decryptedEmail = user.emailEncrypted ? 
-        await encryptionService.decrypt(JSON.parse(user.emailEncrypted)) : null;
+      const decryptedEmail = await this.tryDecrypt(user.emailEncrypted ?? null);
       
       if (!sanitizedData.otp && !demoEmails.includes(decryptedEmail || '')) {
         return {
@@ -414,13 +424,10 @@ export class AuthService {
       // Decrypt and compare credentials
       for (const user of users) {
         try {
-          // Decrypt PII fields
-          const decryptedSaId = user.saIdEncrypted ? 
-            await encryptionService.decrypt(JSON.parse(user.saIdEncrypted)) : null;
-          const decryptedAccountNumber = user.accountNumberEncrypted ? 
-            await encryptionService.decrypt(JSON.parse(user.accountNumberEncrypted)) : null;
-          const decryptedEmail = user.emailEncrypted ? 
-            await encryptionService.decrypt(JSON.parse(user.emailEncrypted)) : null;
+          // Decrypt PII fields (support legacy plain strings)
+          const decryptedSaId = await this.tryDecrypt(user.saIdEncrypted);
+          const decryptedAccountNumber = await this.tryDecrypt(user.accountNumberEncrypted);
+          const decryptedEmail = await this.tryDecrypt(user.emailEncrypted ?? null);
 
           // Check if any credentials match
           const saIdMatch = decryptedSaId && (decryptedSaId === saId);
@@ -457,19 +464,24 @@ export class AuthService {
       // Decrypt and compare credentials
       for (const user of users) {
         try {
-          // Decrypt email and account number
-          const decryptedEmail = user.emailEncrypted ? 
-            await encryptionService.decrypt(JSON.parse(user.emailEncrypted)) : null;
-          const decryptedAccountNumber = user.accountNumberEncrypted ? 
-            await encryptionService.decrypt(JSON.parse(user.accountNumberEncrypted)) : null;
+          // Decrypt email, account number, and SA ID
+          const decryptedEmail = await this.tryDecrypt(user.emailEncrypted ?? null);
+          const decryptedAccountNumber = await this.tryDecrypt(user.accountNumberEncrypted);
+          const decryptedSaId = await this.tryDecrypt(user.saIdEncrypted);
 
-          // Check if credentials match
+          // Check if identifier matches email OR account number OR SA ID,
+          // and the provided accountNumber matches the stored account number
+          const normalizedIdentifier = usernameOrEmail.trim();
           const emailMatch = decryptedEmail && 
-            (decryptedEmail.toLowerCase() === usernameOrEmail.toLowerCase());
+            (decryptedEmail.toLowerCase() === normalizedIdentifier.toLowerCase());
+          const usernameIsAccount = decryptedAccountNumber && 
+            (decryptedAccountNumber === normalizedIdentifier);
+          const usernameIsSaId = decryptedSaId && 
+            (decryptedSaId === normalizedIdentifier);
           const accountMatch = decryptedAccountNumber && 
-            (decryptedAccountNumber === accountNumber);
+            (decryptedAccountNumber === accountNumber.trim());
 
-          if (emailMatch && accountMatch) {
+          if ((emailMatch || usernameIsAccount || usernameIsSaId) && accountMatch) {
             return user;
           }
         } catch (decryptError) {
@@ -579,9 +591,9 @@ export class AuthService {
   private async mapUserToDto(user: User): Promise<UserDto> {
     try {
       const fullName = user.fullNameEncrypted ? 
-        await encryptionService.decrypt(JSON.parse(user.fullNameEncrypted)) : '';
+        await this.tryDecrypt(user.fullNameEncrypted) || '' : '';
       const email = user.emailEncrypted ? 
-        await encryptionService.decrypt(JSON.parse(user.emailEncrypted)) : undefined;
+        await this.tryDecrypt(user.emailEncrypted) || undefined : undefined;
 
       return {
         id: user.id,
