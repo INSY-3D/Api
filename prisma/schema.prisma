@@ -200,3 +200,17 @@ model HealthCheck {
 
   @@map("health_checks")
 }
+
+// OTP (One-Time Password) for email-based authentication
+model OtpCode {
+  id        String   @id @default(cuid())
+  userId    String?
+  email     String
+  code      String
+  purpose   String   @default("login") // login, password-reset, etc.
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("otp_codes")
+}

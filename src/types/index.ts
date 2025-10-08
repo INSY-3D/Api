@@ -59,6 +59,7 @@ export interface LoginDto {
   accountNumber: string;
   password: string;
   otp?: string;
+  tempEmail?: string; // For users without registered email who need OTP
 }
 
 export interface AuthResponse {
@@ -69,6 +70,7 @@ export interface AuthResponse {
   expiresIn: string;
   mfa?: string;
   unknownDevice?: boolean;
+  hasEmail?: boolean; // Indicates if user has registered email
 }
 
 // Payment DTOs

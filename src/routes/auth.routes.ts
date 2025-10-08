@@ -213,4 +213,35 @@ router.get('/csrf',
   authController.getCsrfToken.bind(authController)
 );
 
+/**
+ * @swagger
+ * /api/v1/send-otp:
+ *   post:
+ *     summary: Send OTP to email (for users without registered email)
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               userId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: OTP sent successfully
+ *       400:
+ *         description: Email is required
+ */
+router.post('/send-otp',
+  authRateLimit,
+  authController.sendOtp.bind(authController)
+);
+
 export default router;

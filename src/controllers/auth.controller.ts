@@ -68,10 +68,11 @@ export class AuthController {
       if (result.mfa === 'required') {
         res.status(200).json({
           success: true,
-          message: 'MFA required',
+          message: result.message, // Use message from auth service (contains OTP sent info)
           data: {
             mfa: 'required',
             user: result.user,
+            hasEmail: result.hasEmail, // Include hasEmail flag
           },
         });
         return;
@@ -257,6 +258,55 @@ export class AuthController {
   }
 
   /**
+   * Send OTP to email (for users without registered email)
+   * POST /api/v1/auth/send-otp
+   */
+  async sendOtp(req: Request, res: Response): Promise<void> {
+    try {
+      const { email, userId } = req.body;
+
+      if (!email) {
+        res.status(400).json({
+          success: false,
+          message: 'Email is required',
+          code: 'EMAIL_REQUIRED',
+        });
+        return;
+      }
+
+      const ipAddress = this.getClientIpAddress(req);
+      const userAgent = req.get('User-Agent') || '';
+
+      logger.info('OTP send request', { email, userId, ipAddress });
+
+      const { otpService } = await import('@/services/otp.service');
+      const result = await otpService.generateAndSendOtp(email, userId, 'login');
+
+      if (!result.success) {
+        res.status(500).json({
+          success: false,
+          message: result.message,
+          code: 'OTP_SEND_FAILED',
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        message: result.message,
+      });
+    } catch (error) {
+      logger.error('Send OTP failed', { error });
+      
+      res.status(500).json({
+        success: false,
+        message: 'Failed to send OTP',
+        code: 'OTP_SEND_FAILED',
+      });
+    }
+  }
+
+  /**
    * Staff login endpoint
    * POST /api/v1/staff-login
    */
@@ -288,10 +338,11 @@ export class AuthController {
       if (result.mfa === 'required') {
         res.status(200).json({
           success: true,
-          message: 'MFA required',
+          message: result.message, // Use message from auth service (contains OTP sent info)
           data: {
             mfa: 'required',
             user: result.user,
+            hasEmail: result.hasEmail, // Include hasEmail flag
           },
         });
         return;

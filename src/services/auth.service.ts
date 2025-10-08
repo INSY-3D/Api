@@ -5,6 +5,7 @@ import { prisma } from '@/config/database';
 import { config } from '@/config';
 import { logger, logSecurityEvent } from '@/config/logger';
 import { encryptionService } from './encryption.service';
+import { otpService } from './otp.service';
 import { 
   User, 
   UserSession, 
@@ -269,19 +270,73 @@ export class AuthService {
         throw new Error('Invalid credentials');
       }
 
-      // Check for MFA requirement (simplified for demo)
-      const demoEmails = ['test@nexuspay.dev', 'staff@nexuspay.dev', 'admin@nexuspay.dev'];
-      const decryptedEmail = await this.tryDecrypt(user.emailEncrypted ?? null);
+      // OTP-based authentication flow (skip for staff/admin)
+      const isStaffOrAdmin = user.role === 'staff' || user.role === 'admin';
       
-      if (!sanitizedData.otp && !demoEmails.includes(decryptedEmail || '')) {
-        return {
-          message: 'MFA required',
-          user: await this.mapUserToDto(user),
-          accessToken: '',
-          refreshToken: '',
-          expiresIn: '',
-          mfa: 'required',
-        };
+      if (!isStaffOrAdmin) {
+        // Only require OTP for customers
+        const decryptedEmail = await this.tryDecrypt(user.emailEncrypted ?? null);
+        
+        if (!sanitizedData.otp) {
+          // User hasn't provided OTP yet, need to send it
+          if (decryptedEmail) {
+            // User has registered email, send OTP to it
+            const otpResult = await otpService.generateAndSendOtp(
+              decryptedEmail, 
+              user.id, 
+              'login'
+            );
+            
+            if (!otpResult.success) {
+              throw new Error('Failed to send OTP. Please try again.');
+            }
+
+            return {
+              message: otpResult.message,
+              user: await this.mapUserToDto(user),
+              accessToken: '',
+              refreshToken: '',
+              expiresIn: '',
+              mfa: 'required',
+              hasEmail: true,
+            };
+          } else {
+            // User doesn't have registered email, they need to provide one
+            return {
+              message: 'Please provide an email to receive OTP',
+              user: await this.mapUserToDto(user),
+              accessToken: '',
+              refreshToken: '',
+              expiresIn: '',
+              mfa: 'required',
+              hasEmail: false,
+            };
+          }
+        }
+
+        // Verify OTP if provided
+        // Use registered email if available, otherwise use tempEmail from request
+        const emailForVerification = decryptedEmail || loginData.tempEmail;
+        
+        if (!emailForVerification) {
+          throw new Error('Email is required for OTP verification');
+        }
+
+        const otpVerification = await otpService.verifyOtp(
+          emailForVerification,
+          sanitizedData.otp,
+          'login'
+        );
+
+        if (!otpVerification.valid) {
+          await this.logSecurityEvent(user.id, EventType.LOGIN_FAILED, 
+            'Login attempt with invalid OTP', ipAddress, userAgent);
+          throw new Error(otpVerification.message);
+        }
+      } else {
+        // Staff/Admin: Log that OTP was skipped
+        await this.logSecurityEvent(user.id, EventType.USER_LOGIN, 
+          'Staff login - OTP skipped', ipAddress, userAgent);
       }
 
       // Reset failed login attempts
