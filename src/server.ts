@@ -105,23 +105,22 @@ class NexusPayServer {
       // Connect to database
       await connectDatabase();
 
-      // Start server
-      this.app.listen(this.port, config.server.host, () => {
-        logger.info('NexusPay API Server started', {
-          port: this.port,
-          host: config.server.host,
-          environment: config.server.nodeEnv,
-          version: process.env.npm_package_version || '1.0.0',
-        });
+        // Start server — omit host so it binds to 0.0.0.0 automatically
+  this.app.listen(this.port, () => {
+    logger.info(`NexusPay API Server started on port ${this.port}`, {
+      environment: config.server.nodeEnv,
+      version: process.env.npm_package_version || '1.0.0',
+    });
 
-        if (config.server.isDevelopment) {
-          logger.info('Development server information', {
-            localUrl: `http://${config.server.host}:${this.port}`,
-            apiUrl: `http://${config.server.host}:${this.port}/api/v1`,
-            healthUrl: `http://${config.server.host}:${this.port}/health`,
-          });
-        }
+    if (config.server.isDevelopment) {
+      logger.info('Development server information', {
+        localUrl: `http://localhost:${this.port}`,
+        apiUrl: `http://localhost:${this.port}/api/v1`,
+        healthUrl: `http://localhost:${this.port}/health`,
       });
+    }
+  });
+
     } catch (error) {
       logger.error('Failed to start server', { error });
       process.exit(1);
