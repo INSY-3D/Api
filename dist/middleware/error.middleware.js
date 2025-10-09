@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.asyncHandler = exports.ExternalServiceError = exports.DatabaseError = exports.RateLimitError = exports.ConflictError = exports.NotFoundError = exports.AuthorizationError = exports.AuthenticationError = exports.ValidationError = exports.notFoundHandler = exports.errorHandler = void 0;
-const logger_1 = require("@/config/logger");
-const logger_2 = require("@/config/logger");
-const enums_1 = require("@/types/enums");
+const logger_1 = require("../config/logger");
+const logger_2 = require("../config/logger");
+const enums_1 = require("../types/enums");
 const errorHandler = (error, req, res, next) => {
     logger_1.logger.error('API Error', {
         error: error.message,

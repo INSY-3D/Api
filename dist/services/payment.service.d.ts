@@ -1,5 +1,5 @@
 import { User } from '@prisma/client';
-import { CreatePaymentDto, UpdateBeneficiaryDto, SubmitPaymentDto, PaymentDto, PaymentListResponse } from '@/types';
+import { CreatePaymentDto, UpdateBeneficiaryDto, SubmitPaymentDto, PaymentDto, PaymentListResponse } from '../types';
 export declare class PaymentService {
     createPayment(user: User, paymentData: CreatePaymentDto, ipAddress: string, userAgent: string): Promise<PaymentDto>;
     updateBeneficiary(user: User, paymentId: string, beneficiaryData: UpdateBeneficiaryDto, ipAddress: string, userAgent: string): Promise<PaymentDto>;

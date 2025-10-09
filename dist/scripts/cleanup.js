@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const database_1 = require("@/config/database");
-const logger_1 = require("@/config/logger");
+const database_1 = require("../config/database");
+const logger_1 = require("../config/logger");
 async function main() {
     const keepEmails = new Set([
         'test@nexuspay.dev',

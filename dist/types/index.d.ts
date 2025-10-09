@@ -46,6 +46,7 @@ export interface LoginDto {
     accountNumber: string;
     password: string;
     otp?: string;
+    tempEmail?: string;
 }
 export interface AuthResponse {
     message: string;
@@ -55,6 +56,7 @@ export interface AuthResponse {
     expiresIn: string;
     mfa?: string;
     unknownDevice?: boolean;
+    hasEmail?: boolean;
 }
 export interface PaymentDto {
     id: string;

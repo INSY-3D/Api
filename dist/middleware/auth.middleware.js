@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.csrfProtection = exports.authRateLimit = exports.validateDevice = exports.validateSession = exports.optionalAuth = exports.requireAdmin = exports.requireStaff = exports.requireCustomer = exports.requireRole = exports.authenticateToken = void 0;
-const auth_service_1 = require("@/services/auth.service");
-const logger_1 = require("@/config/logger");
-const enums_1 = require("@/types/enums");
+const auth_service_1 = require("../services/auth.service");
+const logger_1 = require("../config/logger");
+const enums_1 = require("../types/enums");
 const authenticateToken = async (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;

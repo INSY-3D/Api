@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyPaymentSchema = exports.submitPaymentSchema = exports.updateBeneficiarySchema = exports.createPaymentSchema = void 0;
 const zod_1 = require("zod");
-const validation_1 = require("@/types/validation");
+const validation_1 = require("../types/validation");
 exports.createPaymentSchema = zod_1.z.object({
     amount: zod_1.z.string()
         .min(1, 'Amount is required')

@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.notFoundHandler = void 0;
-const logger_1 = require("@/config/logger");
+const logger_1 = require("../config/logger");
 const notFoundHandler = (req, res, next) => {
     logger_1.logger.warn('Route not found', {
         method: req.method,

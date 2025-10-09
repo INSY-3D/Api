@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sanitizeRequest = exports.validateParams = exports.validateQuery = exports.validateRequest = void 0;
 const zod_1 = require("zod");
-const logger_1 = require("@/config/logger");
+const logger_1 = require("../config/logger");
 const validateRequest = (schema) => {
     return (req, res, next) => {
         try {

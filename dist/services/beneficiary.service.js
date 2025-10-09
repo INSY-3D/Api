@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.beneficiaryService = exports.BeneficiaryService = void 0;
-const database_1 = require("@/config/database");
-const logger_1 = require("@/config/logger");
+const database_1 = require("../config/database");
+const logger_1 = require("../config/logger");
 class BeneficiaryService {
     async getUserBeneficiaries(userId) {
         try {

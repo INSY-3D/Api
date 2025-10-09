@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { AuthenticatedRequest } from '@/types';
+import { AuthenticatedRequest } from '../types';
 export declare class AuthController {
     register(req: Request, res: Response): Promise<void>;
     login(req: Request, res: Response): Promise<void>;
@@ -7,6 +7,7 @@ export declare class AuthController {
     getMe(req: AuthenticatedRequest, res: Response): Promise<void>;
     refreshToken(req: Request, res: Response): Promise<void>;
     getCsrfToken(req: Request, res: Response): Promise<void>;
+    sendOtp(req: Request, res: Response): Promise<void>;
     staffLogin(req: Request, res: Response): Promise<void>;
     private getClientIpAddress;
     private generateCsrfToken;

@@ -1,4 +1,4 @@
-import { EncryptedData, DataEncryptionKey } from '@/types';
+import { EncryptedData, DataEncryptionKey } from '../types';
 export declare class EncryptionService {
     private masterKey;
     constructor();

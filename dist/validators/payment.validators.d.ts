@@ -11,15 +11,15 @@ export declare const createPaymentSchema: z.ZodObject<{
     amount: string;
     currency: string;
     provider: string;
-    reference?: string | undefined;
     purpose?: string | undefined;
+    reference?: string | undefined;
 }, {
     idempotencyKey: string;
     amount: string;
     currency: string;
+    purpose?: string | undefined;
     provider?: string | undefined;
     reference?: string | undefined;
-    purpose?: string | undefined;
 }>;
 export declare const updateBeneficiarySchema: z.ZodObject<{
     beneficiaryName: z.ZodString;
@@ -54,13 +54,13 @@ export declare const submitPaymentSchema: z.ZodObject<{
     purpose: z.ZodOptional<z.ZodString>;
     otp: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
+    purpose?: string | undefined;
     otp?: string | undefined;
     reference?: string | undefined;
-    purpose?: string | undefined;
 }, {
+    purpose?: string | undefined;
     otp?: string | undefined;
     reference?: string | undefined;
-    purpose?: string | undefined;
 }>;
 export declare const verifyPaymentSchema: z.ZodObject<{
     action: z.ZodEnum<["approve", "reject"]>;

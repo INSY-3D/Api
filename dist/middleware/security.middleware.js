@@ -6,9 +6,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.corsOptions = exports.requestSizeLimit = exports.ipWhitelist = exports.requestLogging = exports.securityHeaders = exports.wafRateLimit = exports.registerRateLimit = exports.loginRateLimit = exports.apiRateLimit = exports.createRateLimit = exports.wafMiddleware = void 0;
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const helmet_1 = __importDefault(require("helmet"));
-const config_1 = require("@/config");
-const logger_1 = require("@/config/logger");
-const enums_1 = require("@/types/enums");
+const config_1 = require("../config");
+const logger_1 = require("../config/logger");
+const enums_1 = require("../types/enums");
 const WAF_RULES = [
     {
         name: 'SQL_INJECTION',
