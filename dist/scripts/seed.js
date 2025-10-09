@@ -38,7 +38,7 @@ async function seed() {
             const existingUser = await prisma.user.findFirst({
                 where: {
                     OR: [
-                        { saIdEncrypted: userData.saId },
+                        { emailEncrypted: userData.email },
                         { accountNumberEncrypted: userData.accountNumber },
                     ],
                 },
@@ -65,9 +65,7 @@ async function seed() {
             });
             logger_1.logger.info(`Created user: ${userData.email} (${userData.role})`);
         }
-        const testUser = await prisma.user.findFirst({
-            where: { emailEncrypted: 'test@nexuspay.dev' },
-        });
+        const testUser = await prisma.user.findFirst();
         if (testUser) {
             await prisma.payment.create({
                 data: {

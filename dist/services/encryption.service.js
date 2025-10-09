@@ -5,8 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.encryptionService = exports.EncryptionService = void 0;
 const crypto_1 = __importDefault(require("crypto"));
-const config_1 = require("@/config");
-const logger_1 = require("@/config/logger");
+const config_1 = require("../config");
+const logger_1 = require("../config/logger");
 class EncryptionService {
     masterKey;
     constructor() {

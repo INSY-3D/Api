@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.staffLoginSchema = exports.refreshTokenSchema = exports.loginSchema = exports.registerSchema = void 0;
 const zod_1 = require("zod");
-const validation_1 = require("@/types/validation");
+const validation_1 = require("../types/validation");
 exports.registerSchema = zod_1.z.object({
     fullName: zod_1.z.string()
         .min(2, 'Full name must be at least 2 characters')

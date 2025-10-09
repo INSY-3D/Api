@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.paymentController = exports.PaymentController = void 0;
-const payment_service_1 = require("@/services/payment.service");
-const logger_1 = require("@/config/logger");
+const payment_service_1 = require("../services/payment.service");
+const logger_1 = require("../config/logger");
 class PaymentController {
     async createPayment(req, res) {
         try {

@@ -1,10 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const payment_controller_1 = require("@/controllers/payment.controller");
-const auth_middleware_1 = require("@/middleware/auth.middleware");
-const validation_middleware_1 = require("@/middleware/validation.middleware");
-const payment_validators_1 = require("@/validators/payment.validators");
+const payment_controller_1 = require("../controllers/payment.controller");
+const auth_middleware_1 = require("../middleware/auth.middleware");
+const validation_middleware_1 = require("../middleware/validation.middleware");
+const payment_validators_1 = require("../validators/payment.validators");
 const router = (0, express_1.Router)();
 router.post('/', auth_middleware_1.authenticateToken, auth_middleware_1.requireCustomer, (0, validation_middleware_1.validateRequest)(payment_validators_1.createPaymentSchema), payment_controller_1.paymentController.createPayment.bind(payment_controller_1.paymentController));
 router.get('/', auth_middleware_1.authenticateToken, auth_middleware_1.requireCustomer, payment_controller_1.paymentController.getUserPayments.bind(payment_controller_1.paymentController));

@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { AuthenticatedRequest } from '@/types';
+import { AuthenticatedRequest } from '../types';
 export declare class PaymentController {
     createPayment(req: AuthenticatedRequest, res: Response): Promise<void>;
     updateBeneficiary(req: AuthenticatedRequest, res: Response): Promise<void>;

@@ -6,12 +6,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.authService = exports.AuthService = void 0;
 const argon2_1 = __importDefault(require("argon2"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const database_1 = require("@/config/database");
-const config_1 = require("@/config");
-const logger_1 = require("@/config/logger");
+const database_1 = require("../config/database");
+const config_1 = require("../config");
+const logger_1 = require("../config/logger");
 const encryption_service_1 = require("./encryption.service");
-const validation_1 = require("@/types/validation");
-const enums_1 = require("@/types/enums");
+const otp_service_1 = require("./otp.service");
+const validation_1 = require("../types/validation");
+const enums_1 = require("../types/enums");
 class AuthService {
     async tryDecrypt(possiblyEncrypted) {
         if (!possiblyEncrypted)
@@ -174,17 +175,49 @@ class AuthService {
                 await this.logSecurityEvent(user.id, enums_1.EventType.LOGIN_FAILED, 'Login attempt with invalid password', ipAddress, userAgent);
                 throw new Error('Invalid credentials');
             }
-            const demoEmails = ['test@nexuspay.dev', 'staff@nexuspay.dev', 'admin@nexuspay.dev'];
-            const decryptedEmail = await this.tryDecrypt(user.emailEncrypted ?? null);
-            if (!sanitizedData.otp && !demoEmails.includes(decryptedEmail || '')) {
-                return {
-                    message: 'MFA required',
-                    user: await this.mapUserToDto(user),
-                    accessToken: '',
-                    refreshToken: '',
-                    expiresIn: '',
-                    mfa: 'required',
-                };
+            const isStaffOrAdmin = user.role === 'staff' || user.role === 'admin';
+            if (!isStaffOrAdmin) {
+                const decryptedEmail = await this.tryDecrypt(user.emailEncrypted ?? null);
+                if (!sanitizedData.otp) {
+                    if (decryptedEmail) {
+                        const otpResult = await otp_service_1.otpService.generateAndSendOtp(decryptedEmail, user.id, 'login');
+                        if (!otpResult.success) {
+                            throw new Error('Failed to send OTP. Please try again.');
+                        }
+                        return {
+                            message: otpResult.message,
+                            user: await this.mapUserToDto(user),
+                            accessToken: '',
+                            refreshToken: '',
+                            expiresIn: '',
+                            mfa: 'required',
+                            hasEmail: true,
+                        };
+                    }
+                    else {
+                        return {
+                            message: 'Please provide an email to receive OTP',
+                            user: await this.mapUserToDto(user),
+                            accessToken: '',
+                            refreshToken: '',
+                            expiresIn: '',
+                            mfa: 'required',
+                            hasEmail: false,
+                        };
+                    }
+                }
+                const emailForVerification = decryptedEmail || loginData.tempEmail;
+                if (!emailForVerification) {
+                    throw new Error('Email is required for OTP verification');
+                }
+                const otpVerification = await otp_service_1.otpService.verifyOtp(emailForVerification, sanitizedData.otp, 'login');
+                if (!otpVerification.valid) {
+                    await this.logSecurityEvent(user.id, enums_1.EventType.LOGIN_FAILED, 'Login attempt with invalid OTP', ipAddress, userAgent);
+                    throw new Error(otpVerification.message);
+                }
+            }
+            else {
+                await this.logSecurityEvent(user.id, enums_1.EventType.USER_LOGIN, 'Staff login - OTP skipped', ipAddress, userAgent);
             }
             await database_1.prisma.user.update({
                 where: { id: user.id },

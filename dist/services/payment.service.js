@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.paymentService = exports.PaymentService = void 0;
-const database_1 = require("@/config/database");
-const logger_1 = require("@/config/logger");
+const database_1 = require("../config/database");
+const logger_1 = require("../config/logger");
 const encryption_service_1 = require("./encryption.service");
-const enums_1 = require("@/types/enums");
-const validation_1 = require("@/types/validation");
+const enums_1 = require("../types/enums");
+const validation_1 = require("../types/validation");
 class PaymentService {
     async createPayment(user, paymentData, ipAddress, userAgent) {
         try {
