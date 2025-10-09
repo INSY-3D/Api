@@ -101,36 +101,38 @@ class NexusPayServer {
   }
 
   public async start(): Promise<void> {
-    try {
-      // Connect to database
-      await connectDatabase();
+  try {
+    // Connect to database
+    await connectDatabase();
 
-        // Start server — omit host so it binds to 0.0.0.0 automatically
-  this.app.listen(this.port, () => {
-    logger.info(`NexusPay API Server started on port ${this.port}`, {
-      environment: config.server.nodeEnv,
-      version: process.env.npm_package_version || '1.0.0',
-    });
+    // Use Render's injected PORT or default to 10000 locally
+    const PORT = process.env.PORT ? Number(process.env.PORT) : this.port;
 
-    if (config.server.isDevelopment) {
-      logger.info('Development server information', {
-        localUrl: `http://localhost:${this.port}`,
-        apiUrl: `http://localhost:${this.port}/api/v1`,
-        healthUrl: `http://localhost:${this.port}/health`,
+    // Start server — omit host so it binds to 0.0.0.0 automatically
+    this.app.listen(PORT, () => {
+      logger.info(`NexusPay API Server started on port ${PORT}`, {
+        environment: config.server.nodeEnv,
+        version: process.env.npm_package_version || '1.0.0',
       });
-    }
-  });
 
-    } catch (error) {
-      logger.error('Failed to start server', { error });
-      process.exit(1);
-    }
-  }
-
-  public getApp(): express.Application {
-    return this.app;
+      if (config.server.isDevelopment) {
+        logger.info('Development server information', {
+          localUrl: `http://localhost:${PORT}`,
+          apiUrl: `http://localhost:${PORT}/api/v1`,
+          healthUrl: `http://localhost:${PORT}/health`,
+        });
+      }
+    });
+  } catch (error) {
+    logger.error('Failed to start server', { error });
+    process.exit(1);
   }
 }
+
+public getApp(): express.Application {
+  return this.app;
+}
+
 
 // Create and start server
 const server = new NexusPayServer();
