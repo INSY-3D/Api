@@ -20,7 +20,7 @@ class NexusPayServer {
     port;
     constructor() {
         this.app = (0, express_1.default)();
-        this.port = config_1.config.server.port;
+        this.port = Number(process.env.PORT) || config_1.config.server.port || 10000;
         this.setupMiddleware();
         this.setupRoutes();
         this.setupErrorHandling();
@@ -70,18 +70,17 @@ class NexusPayServer {
     async start() {
         try {
             await (0, database_1.connectDatabase)();
-            this.app.listen(this.port, config_1.config.server.host, () => {
-                logger_1.logger.info('NexusPay API Server started', {
-                    port: this.port,
-                    host: config_1.config.server.host,
+            const PORT = process.env.PORT ? Number(process.env.PORT) : this.port;
+            this.app.listen(PORT, () => {
+                logger_1.logger.info(`NexusPay API Server started on port ${PORT}`, {
                     environment: config_1.config.server.nodeEnv,
                     version: process.env.npm_package_version || '1.0.0',
                 });
                 if (config_1.config.server.isDevelopment) {
                     logger_1.logger.info('Development server information', {
-                        localUrl: `http://${config_1.config.server.host}:${this.port}`,
-                        apiUrl: `http://${config_1.config.server.host}:${this.port}/api/v1`,
-                        healthUrl: `http://${config_1.config.server.host}:${this.port}/health`,
+                        localUrl: `http://localhost:${PORT}`,
+                        apiUrl: `http://localhost:${PORT}/api/v1`,
+                        healthUrl: `http://localhost:${PORT}/health`,
                     });
                 }
             });

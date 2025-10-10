@@ -6,9 +6,10 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./nexuspay.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
+
 
 // User model with encrypted PII fields
 model User {
