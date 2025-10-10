@@ -150,16 +150,22 @@ export class AuthController {
         return;
       }
 
+      // Get decrypted user info from auth service
+      const userInfo = await authService.getUserInfo(req.user.id);
+
+      if (!userInfo) {
+        res.status(404).json({
+          success: false,
+          message: 'User not found',
+          code: 'USER_NOT_FOUND',
+        });
+        return;
+      }
+
       res.status(200).json({
         success: true,
         data: {
-          user: {
-            id: req.user.id,
-            fullName: req.user.fullNameEncrypted, // Will be decrypted
-            email: req.user.emailEncrypted, // Will be decrypted
-            role: req.user.role,
-            createdAt: req.user.createdAt,
-          },
+          user: userInfo,
         },
       });
     } catch (error) {

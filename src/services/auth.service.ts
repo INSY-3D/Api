@@ -424,6 +424,26 @@ export class AuthService {
   }
 
   /**
+   * Get user information (decrypted)
+   */
+  async getUserInfo(userId: string): Promise<UserDto | null> {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+      });
+
+      if (!user) {
+        return null;
+      }
+
+      return await this.mapUserToDto(user);
+    } catch (error) {
+      logger.error('Failed to get user info', { error, userId });
+      throw error;
+    }
+  }
+
+  /**
    * Logout user
    */
   async logout(userId: string, sessionId: string): Promise<void> {
