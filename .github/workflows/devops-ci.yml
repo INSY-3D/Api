@@ -115,11 +115,30 @@ jobs:
           cache: npm
 
       # Step
-      - name: Execute Commands
+      # ----
+      # This step will run the Unit Test suite via Jest.
+      # If no tests are implemented, this step will still succeed. Once finished
+      # an artifact will always be uploaded for each concurrent matrix with test
+      # results in a plain-text format.
+      # ----
+      - name: Execute the Jest Unit Testing
         shell: bash
         run: |
           npm ci --prefer-offline --no-audit --no-fund
-          npm test -- --coverage --passWithNoTests
+          mkdir -p test-results coverage
+          npm test -- --coverage --passWithNoTests --json --outputFile=test-results/jest-results.json
+          npx jest --coverageReporters=text-summary > test-results/coverage-summary.txt || true
+
+      # Step
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jest-test-results-node-${{ matrix.node-version }}
+          retention-days: 7
+          path: |
+            test-results/
+            coverage/
 
 
 # ------------------------------------------------------------------------------
