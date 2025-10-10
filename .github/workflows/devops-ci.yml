@@ -88,7 +88,7 @@ jobs:
 
   # Job
   node-tests:
-    name: Tests
+    name: Tests (NodeJs ${{ matrix.node-version }})
     runs-on: ubuntu-latest
     needs: validate
     if: |
