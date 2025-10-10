@@ -28,14 +28,62 @@ export class EmailService {
           user: process.env.SMTP_USER,
           pass: process.env.SMTP_PASS,
         },
+        // Add timeout and connection settings
+        connectionTimeout: 10000, // 10 seconds
+        greetingTimeout: 10000,
+        socketTimeout: 10000,
       });
 
       logger.info('SMTP transporter initialized', {
         host: process.env.SMTP_HOST || 'smtp.gmail.com',
         port: process.env.SMTP_PORT || '587',
+        user: process.env.SMTP_USER,
       });
+
+      // Verify SMTP connection on startup
+      this.verifyConnection();
     } catch (error) {
       logger.error('Failed to initialize SMTP transporter', { error });
+    }
+  }
+
+  /**
+   * Verify SMTP connection
+   */
+  private async verifyConnection(): Promise<void> {
+    if (!this.transporter) {
+      logger.warn('Cannot verify SMTP connection: transporter not initialized');
+      return;
+    }
+
+    try {
+      await this.transporter.verify();
+      logger.info('✅ SMTP connection verified successfully', {
+        host: process.env.SMTP_HOST,
+        from: process.env.SMTP_FROM,
+      });
+    } catch (error: any) {
+      logger.error('❌ SMTP connection verification FAILED', { 
+        error: error.message,
+        code: error.code,
+        command: error.command,
+        host: process.env.SMTP_HOST,
+        port: process.env.SMTP_PORT,
+      });
+      console.error('\n' + '='.repeat(80));
+      console.error('🚨 SMTP CONNECTION ERROR');
+      console.error('='.repeat(80));
+      console.error('Error:', error.message);
+      console.error('\nPossible causes:');
+      console.error('1. Invalid SMTP credentials (check SMTP_USER and SMTP_PASS)');
+      console.error('2. Sender email not verified in Brevo dashboard');
+      console.error('3. Incorrect SMTP host or port');
+      console.error('4. Network/firewall blocking SMTP connection');
+      console.error('\nTo fix:');
+      console.error('- Verify your sender email in Brevo: https://app.brevo.com/settings/senders');
+      console.error('- Check SMTP credentials in your Brevo dashboard');
+      console.error('- Ensure SMTP_HOST=smtp-relay.brevo.com and SMTP_PORT=587');
+      console.error('='.repeat(80) + '\n');
     }
   }
 
@@ -97,6 +145,7 @@ export class EmailService {
     try {
       if (!this.transporter) {
         logger.error('SMTP transporter not initialized');
+        console.error('❌ Cannot send email: SMTP transporter not initialized');
         return false;
       }
 
@@ -107,16 +156,59 @@ export class EmailService {
         html: this.getOtpEmailTemplate(code, expiresInMinutes),
       };
 
+      logger.info('Attempting to send email via SMTP', {
+        from: mailOptions.from,
+        to: this.maskEmail(email),
+        host: process.env.SMTP_HOST,
+      });
+
       const info = await this.transporter.sendMail(mailOptions);
       
-      logger.info('Email sent successfully', {
+      logger.info('✅ Email sent successfully via SMTP', {
         messageId: info.messageId,
+        response: info.response,
         to: this.maskEmail(email),
+        accepted: info.accepted,
+        rejected: info.rejected,
       });
+
+      // Check if email was actually accepted
+      if (info.rejected && info.rejected.length > 0) {
+        logger.error('❌ Email rejected by SMTP server', {
+          rejected: info.rejected,
+          to: this.maskEmail(email),
+        });
+        console.error('❌ Email rejected by Brevo:', info.rejected);
+        return false;
+      }
       
       return true;
-    } catch (error) {
-      logger.error('SMTP send failed', { error, email: this.maskEmail(email) });
+    } catch (error: any) {
+      logger.error('❌ SMTP send failed', { 
+        error: error.message,
+        code: error.code,
+        command: error.command,
+        response: error.response,
+        responseCode: error.responseCode,
+        email: this.maskEmail(email),
+      });
+
+      console.error('\n' + '='.repeat(80));
+      console.error('🚨 EMAIL SEND ERROR');
+      console.error('='.repeat(80));
+      console.error('To:', this.maskEmail(email));
+      console.error('Error:', error.message);
+      console.error('Code:', error.code);
+      console.error('Response:', error.response);
+      console.error('\nCommon Brevo issues:');
+      console.error('1. Sender email NOT VERIFIED in Brevo dashboard');
+      console.error('   → Go to: https://app.brevo.com/settings/senders');
+      console.error('   → Add and verify:', process.env.SMTP_FROM);
+      console.error('2. Daily sending limit reached (300 emails/day on free plan)');
+      console.error('3. Invalid SMTP credentials');
+      console.error('4. Email blocked by Brevo anti-spam filters');
+      console.error('='.repeat(80) + '\n');
+      
       return false;
     }
   }
