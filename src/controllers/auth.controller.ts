@@ -307,6 +307,56 @@ export class AuthController {
   }
 
   /**
+   * Test email configuration
+   * POST /api/v1/test-email
+   */
+  async testEmail(req: Request, res: Response): Promise<void> {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        res.status(400).json({
+          success: false,
+          message: 'Email is required',
+          code: 'EMAIL_REQUIRED',
+        });
+        return;
+      }
+
+      logger.info('Testing email configuration', { email });
+
+      const { emailService } = await import('@/services/email.service');
+      const testCode = '123456';
+      const emailSent = await emailService.sendOtpEmail(email, testCode, 10);
+
+      if (emailSent) {
+        res.status(200).json({
+          success: true,
+          message: `Test email sent successfully to ${email}`,
+          data: {
+            testCode: testCode,
+            note: 'Check your email inbox (and spam folder) for the OTP email',
+          },
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          message: 'Failed to send test email. Check server logs for details.',
+          code: 'EMAIL_SEND_FAILED',
+        });
+      }
+    } catch (error) {
+      logger.error('Test email failed', { error });
+      
+      res.status(500).json({
+        success: false,
+        message: 'Failed to send test email',
+        code: 'EMAIL_TEST_FAILED',
+      });
+    }
+  }
+
+  /**
    * Staff login endpoint
    * POST /api/v1/staff-login
    */

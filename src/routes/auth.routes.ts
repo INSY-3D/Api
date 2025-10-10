@@ -244,4 +244,32 @@ router.post('/send-otp',
   authController.sendOtp.bind(authController)
 );
 
+/**
+ * @swagger
+ * /api/v1/test-email:
+ *   post:
+ *     summary: Test SMTP email configuration (development/testing only)
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: Test email sent successfully
+ *       500:
+ *         description: Email sending failed
+ */
+router.post('/test-email',
+  authController.testEmail.bind(authController)
+);
+
 export default router;
