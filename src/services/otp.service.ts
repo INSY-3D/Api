@@ -210,7 +210,7 @@ export class OtpService {
    */
   private maskEmail(email: string): string {
     const [local, domain] = email.split('@');
-    if (!domain) return email;
+    if (!domain || !local) return email;
     
     const maskedLocal = local.length > 2 
       ? `${local[0]}${'*'.repeat(local.length - 2)}${local[local.length - 1]}`

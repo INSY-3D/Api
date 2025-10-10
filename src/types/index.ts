@@ -59,7 +59,8 @@ export interface LoginDto {
   accountNumber: string;
   password: string;
   otp?: string;
-  tempEmail?: string; // For users without registered email who need OTP
+  email?: string; // For users without registered email who need OTP
+  tempEmail?: string; // For backwards compatibility
 }
 
 export interface AuthResponse {

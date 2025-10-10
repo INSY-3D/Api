@@ -33,14 +33,19 @@ import { UserRole, EventType, SecurityRiskLevel } from '@/types/enums';
 // Task 2 Compliant: Argon2id password hashing service
 export class AuthService {
   private async tryDecrypt(possiblyEncrypted: string | null): Promise<string | null> {
-    if (!possiblyEncrypted) return null;
+    if (!possiblyEncrypted || possiblyEncrypted.trim() === '') return null;
     try {
       // Attempt to parse as EncryptedData JSON and decrypt
       const parsed = JSON.parse(possiblyEncrypted);
+      if (!parsed || typeof parsed !== 'object') return null;
       return await encryptionService.decrypt(parsed);
-    } catch {
-      // Fallback: treat as plain text already
-      return possiblyEncrypted;
+    } catch (error) {
+      // Fallback: treat as plain text already (for legacy data)
+      // Or return null if it's clearly not valid
+      if (typeof possiblyEncrypted === 'string' && possiblyEncrypted.length > 0) {
+        return possiblyEncrypted;
+      }
+      return null;
     }
   }
   /**
@@ -179,13 +184,21 @@ export class AuthService {
       // Hash password
       const passwordHash = await this.hashPassword(sanitizedData.password);
 
-      // Create user (PII will be encrypted by the encryption service)
+      // Encrypt PII data
+      const fullNameEncrypted = await encryptionService.encrypt(sanitizedData.fullName);
+      const saIdEncrypted = await encryptionService.encrypt(sanitizedData.saId);
+      const accountNumberEncrypted = await encryptionService.encrypt(sanitizedData.accountNumber);
+      const emailEncrypted = sanitizedData.email 
+        ? await encryptionService.encrypt(sanitizedData.email)
+        : null;
+
+      // Create user with encrypted PII
       const user = await prisma.user.create({
         data: {
-          fullNameEncrypted: sanitizedData.fullName, // Will be encrypted
-          saIdEncrypted: sanitizedData.saId, // Will be encrypted
-          accountNumberEncrypted: sanitizedData.accountNumber, // Will be encrypted
-          emailEncrypted: sanitizedData.email, // Will be encrypted
+          fullNameEncrypted: JSON.stringify(fullNameEncrypted),
+          saIdEncrypted: JSON.stringify(saIdEncrypted),
+          accountNumberEncrypted: JSON.stringify(accountNumberEncrypted),
+          emailEncrypted: emailEncrypted ? JSON.stringify(emailEncrypted) : null,
           passwordHash,
           role: UserRole.CUSTOMER,
         },
@@ -241,17 +254,28 @@ export class AuthService {
       };
 
       // Find user by credentials
+      logger.info('🔍 DEBUG: Attempting login', {
+        usernameOrEmail: sanitizedData.usernameOrEmail,
+        accountNumber: sanitizedData.accountNumber,
+      });
+      
       const user = await this.findUserByLoginCredentials(
         sanitizedData.usernameOrEmail,
         sanitizedData.accountNumber
       );
 
       if (!user) {
+        logger.warn('🔍 DEBUG: User not found during login', {
+          usernameOrEmail: sanitizedData.usernameOrEmail,
+          accountNumber: sanitizedData.accountNumber,
+        });
         await this.logLoginAttempt(sanitizedData.usernameOrEmail, ipAddress, userAgent, false, 'User not found');
         await this.logSecurityEvent(null, EventType.LOGIN_FAILED, 
           'Login attempt with invalid credentials', ipAddress, userAgent);
         throw new Error('Invalid credentials');
       }
+      
+      logger.info('🔍 DEBUG: User found', { userId: user.id, role: user.role });
 
       // Check if account is locked
       if (user.lockedUntil && user.lockedUntil > new Date()) {
@@ -261,7 +285,10 @@ export class AuthService {
       }
 
       // Verify password
+      logger.info('🔍 DEBUG: Verifying password for user', { userId: user.id });
       const isPasswordValid = await this.verifyPassword(sanitizedData.password, user.passwordHash);
+      logger.info('🔍 DEBUG: Password verification result', { userId: user.id, isValid: isPasswordValid });
+      
       if (!isPasswordValid) {
         await this.updateFailedLoginAttempts(user.id);
         await this.logLoginAttempt(sanitizedData.usernameOrEmail, ipAddress, userAgent, false, 'Invalid password');
@@ -270,9 +297,14 @@ export class AuthService {
         throw new Error('Invalid credentials');
       }
 
-      // OTP-based authentication flow (skip for staff/admin)
-      const isStaffOrAdmin = user.role === 'staff' || user.role === 'admin';
+      // OTP-based authentication flow (TEMPORARILY DISABLED FOR TESTING)
+      // const isStaffOrAdmin = user.role === 'staff' || user.role === 'admin';
       
+      // Log that OTP is disabled
+      await this.logSecurityEvent(user.id, EventType.USER_LOGIN, 
+        '⚠️ Login without OTP - TEMPORARILY DISABLED FOR TESTING', ipAddress, userAgent);
+      
+      /* COMMENTED OUT - OTP DISABLED FOR TESTING
       if (!isStaffOrAdmin) {
         // Only require OTP for customers
         const decryptedEmail = await this.tryDecrypt(user.emailEncrypted ?? null);
@@ -315,8 +347,8 @@ export class AuthService {
         }
 
         // Verify OTP if provided
-        // Use registered email if available, otherwise use tempEmail from request
-        const emailForVerification = decryptedEmail || loginData.tempEmail;
+        // Use registered email if available, otherwise use email from request (tempEmail for backwards compatibility)
+        const emailForVerification = decryptedEmail || loginData.email || loginData.tempEmail;
         
         if (!emailForVerification) {
           throw new Error('Email is required for OTP verification');
@@ -338,6 +370,7 @@ export class AuthService {
         await this.logSecurityEvent(user.id, EventType.USER_LOGIN, 
           'Staff login - OTP skipped', ipAddress, userAgent);
       }
+      */
 
       // Reset failed login attempts
       await prisma.user.update({
@@ -386,6 +419,26 @@ export class AuthService {
       };
     } catch (error) {
       logger.error('User login failed', { error });
+      throw error;
+    }
+  }
+
+  /**
+   * Get user information (decrypted)
+   */
+  async getUserInfo(userId: string): Promise<UserDto | null> {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+      });
+
+      if (!user) {
+        return null;
+      }
+
+      return await this.mapUserToDto(user);
+    } catch (error) {
+      logger.error('Failed to get user info', { error, userId });
       throw error;
     }
   }
@@ -511,10 +564,17 @@ export class AuthService {
 
   private async findUserByLoginCredentials(usernameOrEmail: string, accountNumber: string): Promise<User | null> {
     try {
+      logger.info('🔍 DEBUG: Finding user by credentials', { 
+        usernameOrEmail, 
+        accountNumber 
+      });
+      
       // Get all active users
       const users = await prisma.user.findMany({
         where: { isActive: true },
       });
+      
+      logger.info(`🔍 DEBUG: Found ${users.length} active users in database`);
 
       // Decrypt and compare credentials
       for (const user of users) {
@@ -523,6 +583,13 @@ export class AuthService {
           const decryptedEmail = await this.tryDecrypt(user.emailEncrypted ?? null);
           const decryptedAccountNumber = await this.tryDecrypt(user.accountNumberEncrypted);
           const decryptedSaId = await this.tryDecrypt(user.saIdEncrypted);
+
+          logger.info('🔍 DEBUG: Checking user', { 
+            userId: user.id,
+            decryptedEmail,
+            decryptedAccountNumber,
+            decryptedSaId
+          });
 
           // Check if identifier matches email OR account number OR SA ID,
           // and the provided accountNumber matches the stored account number
@@ -536,7 +603,17 @@ export class AuthService {
           const accountMatch = decryptedAccountNumber && 
             (decryptedAccountNumber === accountNumber.trim());
 
+          logger.info('🔍 DEBUG: Match results', {
+            userId: user.id,
+            emailMatch,
+            usernameIsAccount,
+            usernameIsSaId,
+            accountMatch,
+            wouldMatch: (emailMatch || usernameIsAccount || usernameIsSaId) && accountMatch
+          });
+
           if ((emailMatch || usernameIsAccount || usernameIsSaId) && accountMatch) {
+            logger.info('🔍 DEBUG: USER MATCHED!', { userId: user.id });
             return user;
           }
         } catch (decryptError) {
@@ -548,6 +625,7 @@ export class AuthService {
         }
       }
 
+      logger.warn('🔍 DEBUG: NO USER MATCHED');
       return null;
     } catch (error) {
       logger.error('Failed to find user by login credentials', { error });

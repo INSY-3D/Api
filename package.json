@@ -16,7 +16,10 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx src/scripts/seed.ts",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "ssl:generate": "powershell -ExecutionPolicy Bypass -File ./scripts/generate-ssl-certs.ps1",
+    "ssl:generate:linux": "./scripts/generate-ssl-certs.sh",
+    "ssl:letsencrypt": "./scripts/generate-letsencrypt.sh"
   },
   "keywords": [
     "payments",

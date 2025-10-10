@@ -1,6 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import compression from 'compression';
+import https from 'https';
+import http from 'http';
+import fs from 'fs';
 import { config } from '@/config';
 import { logger } from '@/config/logger';
 import { connectDatabase } from '@/config/database';
@@ -105,26 +108,154 @@ class NexusPayServer {
       // Connect to database
       await connectDatabase();
 
-      // Start server
-      this.app.listen(this.port, config.server.host, () => {
-        logger.info('NexusPay API Server started', {
-          port: this.port,
-          host: config.server.host,
-          environment: config.server.nodeEnv,
-          version: process.env.npm_package_version || '1.0.0',
+      // Check for SSL/TLS certificates (Task 2 Requirement)
+      const useHttps = this.shouldUseHttps();
+
+      if (useHttps) {
+        const httpsOptions = this.getHttpsOptions();
+        
+        // Create HTTPS server
+        const httpsServer = https.createServer(httpsOptions, this.app);
+        
+        httpsServer.listen(this.port, config.server.host, () => {
+          logger.info('NexusPay API Server started with TLS 1.3', {
+            protocol: 'HTTPS',
+            port: this.port,
+            host: config.server.host,
+            environment: config.server.nodeEnv,
+            version: process.env.npm_package_version || '1.0.0',
+            tlsVersion: config.tls?.minVersion || 'TLSv1.3',
+          });
+
+          logger.info('Secure server endpoints', {
+            localUrl: `https://${config.server.host}:${this.port}`,
+            apiUrl: `https://${config.server.host}:${this.port}/api/v1`,
+            healthUrl: `https://${config.server.host}:${this.port}/health`,
+          });
         });
 
-        if (config.server.isDevelopment) {
-          logger.info('Development server information', {
-            localUrl: `http://${config.server.host}:${this.port}`,
-            apiUrl: `http://${config.server.host}:${this.port}/api/v1`,
-            healthUrl: `http://${config.server.host}:${this.port}/health`,
+        // Optional: Start HTTP server that redirects to HTTPS
+        if (config.server.isProduction) {
+          const httpPort = 80;
+          const httpApp = express();
+          
+          // Redirect all HTTP to HTTPS
+          httpApp.use((req, res) => {
+            res.redirect(301, `https://${req.headers.host}${req.url}`);
+          });
+
+          httpApp.listen(httpPort, () => {
+            logger.info('HTTP redirect server started', {
+              port: httpPort,
+              redirectTo: `https://${config.server.host}:${this.port}`,
+            });
           });
         }
-      });
+      } else {
+        // Start HTTP server (development mode without certificates)
+        this.app.listen(this.port, config.server.host, () => {
+          logger.warn('Server starting without TLS/SSL - HTTP ONLY', {
+            protocol: 'HTTP',
+            port: this.port,
+            host: config.server.host,
+            environment: config.server.nodeEnv,
+            version: process.env.npm_package_version || '1.0.0',
+          });
+
+          if (config.server.isDevelopment) {
+            logger.warn('⚠️  For production, configure SSL/TLS certificates', {
+              guide: 'See SSL_SETUP_GUIDE.md for instructions',
+            });
+            
+            logger.info('Development server information', {
+              localUrl: `http://${config.server.host}:${this.port}`,
+              apiUrl: `http://${config.server.host}:${this.port}/api/v1`,
+              healthUrl: `http://${config.server.host}:${this.port}/health`,
+            });
+          }
+        });
+      }
     } catch (error) {
       logger.error('Failed to start server', { error });
       process.exit(1);
+    }
+  }
+
+  /**
+   * Check if HTTPS should be enabled based on certificate availability
+   */
+  private shouldUseHttps(): boolean {
+    const certPath = config.tls?.certPath || process.env.TLS_CERT_PATH;
+    const keyPath = config.tls?.keyPath || process.env.TLS_KEY_PATH;
+
+    if (!certPath || !keyPath) {
+      return false;
+    }
+
+    try {
+      const certExists = fs.existsSync(certPath);
+      const keyExists = fs.existsSync(keyPath);
+
+      if (certExists && keyExists) {
+        logger.info('SSL/TLS certificates found', {
+          certPath,
+          keyPath,
+        });
+        return true;
+      } else {
+        logger.warn('SSL/TLS certificate paths configured but files not found', {
+          certPath: certExists ? 'found' : 'missing',
+          keyPath: keyExists ? 'found' : 'missing',
+        });
+        return false;
+      }
+    } catch (error) {
+      logger.error('Error checking SSL/TLS certificates', { error });
+      return false;
+    }
+  }
+
+  /**
+   * Get HTTPS server options with TLS 1.3 configuration
+   */
+  private getHttpsOptions(): https.ServerOptions {
+    const certPath = config.tls?.certPath || process.env.TLS_CERT_PATH!;
+    const keyPath = config.tls?.keyPath || process.env.TLS_KEY_PATH!;
+    const caPath = config.tls?.caPath || process.env.TLS_CA_PATH;
+
+    try {
+      const options: https.ServerOptions = {
+        cert: fs.readFileSync(certPath),
+        key: fs.readFileSync(keyPath),
+        
+        // TLS 1.3 only (Task 2 Requirement)
+        minVersion: 'TLSv1.3' as any,
+        maxVersion: 'TLSv1.3' as any,
+        
+        // Strong cipher suites for TLS 1.3
+        ciphers: config.tls?.cipherSuites || [
+          'TLS_AES_256_GCM_SHA384',
+          'TLS_CHACHA20_POLY1305_SHA256',
+          'TLS_AES_128_GCM_SHA256',
+        ].join(':'),
+        
+        // Honor cipher order
+        honorCipherOrder: true,
+        
+        // Request client certificate (optional for mTLS)
+        requestCert: false,
+        rejectUnauthorized: false,
+      };
+
+      // Add CA certificate if provided
+      if (caPath && fs.existsSync(caPath)) {
+        options.ca = fs.readFileSync(caPath);
+      }
+
+      return options;
+    } catch (error) {
+      logger.error('Error loading SSL/TLS certificates', { error });
+      throw error;
     }
   }
 
