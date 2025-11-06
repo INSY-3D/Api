@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto';
 import { prisma } from '@/config/database';
 import { encryptionService } from './encryption.service';
 import { authService } from './auth.service';
@@ -111,10 +112,15 @@ class AdminService {
   }
 
   private generateTempPassword(): string {
-    // 12+ strong temp password
+    // 12+ strong temp password using cryptographically secure random bytes
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789@$!%*?&';
+    const length = 14;
     let out = '';
-    for (let i = 0; i < 14; i++) out += chars[Math.floor(Math.random() * chars.length)];
+    // Generate secure random bytes and map to character set
+    const randomValues = randomBytes(length);
+    for (let i = 0; i < length; i++) {
+      out += chars[randomValues[i] % chars.length];
+    }
     return out;
   }
 }
