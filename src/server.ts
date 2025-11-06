@@ -21,6 +21,7 @@ import { notFoundHandler } from '@/middleware/notFound.middleware';
 import authRoutes from '@/routes/auth.routes';
 import paymentRoutes from '@/routes/payment.routes';
 import beneficiaryRoutes from '@/routes/beneficiary.routes';
+import adminRoutes from '@/routes/admin.routes';
 
 // Task 2 Compliant: Express server with security middleware
 class NexusPayServer {
@@ -78,6 +79,7 @@ class NexusPayServer {
     this.app.use('/api/v1/auth', authRoutes);
     this.app.use('/api/v1/payments', paymentRoutes);
     this.app.use('/api/v1/beneficiaries', beneficiaryRoutes);
+    this.app.use('/api/v1', adminRoutes);
 
     // Root endpoint
     this.app.get('/', (req, res) => {

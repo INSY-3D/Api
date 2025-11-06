@@ -10,7 +10,31 @@ async function seed() {
   try {
     logger.info('Starting database seeding...');
 
-    // Create demo users
+    // Ensure single admin exists (exactly one)
+    const existingAdmins = await prisma.user.findMany({ where: { role: 'admin' } });
+    if (existingAdmins.length === 0) {
+      const adminPasswordHash = await authService.hashPassword('AdminPass123!');
+      const adminFullName = await encryptionService.encrypt('Admin User');
+      const adminSaId = await encryptionService.encrypt('1122334455667');
+      const adminAcc = await encryptionService.encrypt('11223344');
+      const adminEmail = await encryptionService.encrypt('admin@nexuspay.dev');
+      await prisma.user.create({
+        data: {
+          fullNameEncrypted: JSON.stringify(adminFullName),
+          saIdEncrypted: JSON.stringify(adminSaId),
+          accountNumberEncrypted: JSON.stringify(adminAcc),
+          emailEncrypted: JSON.stringify(adminEmail),
+          passwordHash: adminPasswordHash,
+          role: 'admin',
+          isActive: true,
+        },
+      });
+      logger.info('Seeded single admin user (admin@nexuspay.dev)');
+    } else if (existingAdmins.length > 1) {
+      logger.warn('Multiple admins detected; leaving as-is to avoid data loss.');
+    }
+
+    // Create demo non-admin users
     const demoUsers = [
       {
         fullName: 'Test Customer',
@@ -27,14 +51,6 @@ async function seed() {
         email: 'staff@nexuspay.dev',
         password: 'StaffPass123!',
         role: 'staff',
-      },
-      {
-        fullName: 'Admin User',
-        saId: '1122334455667',
-        accountNumber: '11223344',
-        email: 'admin@nexuspay.dev',
-        password: 'AdminPass123!',
-        role: 'admin',
       },
     ];
 
