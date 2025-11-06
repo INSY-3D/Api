@@ -51,7 +51,11 @@ class AdminService {
     return { items: mapped, total, page, pageSize };
   }
 
-  async createStaff(input: { fullName: string; staffId: string; email: string; password?: string }) {
+  async createStaff(input: { fullName: string; staffId: string; email: string; password: string }) {
+    // Basic required field checks to avoid encryption errors
+    if (!input.fullName || !input.fullName.trim()) throw new Error('Full name is required');
+    if (!input.staffId || !input.staffId.trim()) throw new Error('Staff ID is required');
+    if (!input.email || !input.email.trim()) throw new Error('Email is required');
     // Ensure no duplicate staff by accountNumber or email
     const existing = await prisma.user.findFirst({
       where: {
@@ -64,11 +68,16 @@ class AdminService {
     });
     if (existing) throw new Error('Staff already exists');
 
-    const password = input.password && input.password.length >= 8 ? input.password : this.generateTempPassword();
-    const passwordHash = await authService.hashPassword(password);
+    // Enforce strong password: 12+ chars, upper, lower, digit, special
+    const strongPwd = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{12,}$/;
+    if (!input.password || !strongPwd.test(input.password)) {
+      throw new Error('Password must be at least 12 characters and include uppercase, lowercase, number, and special character');
+    }
+    const passwordHash = await authService.hashPassword(input.password);
 
     const fullNameEncrypted = await encryptionService.encrypt(input.fullName);
-    const saIdEncrypted = await encryptionService.encrypt('');
+    // Use non-empty placeholder for SA ID to satisfy encryption requirements
+    const saIdEncrypted = await encryptionService.encrypt('STAFF');
     const accountNumberEncrypted = await encryptionService.encrypt(input.staffId);
     const emailEncrypted = await encryptionService.encrypt(input.email);
 
@@ -83,7 +92,7 @@ class AdminService {
         isActive: true,
       },
     });
-    return { user, tempPassword: password };
+    return { user };
   }
 
   async updateStaff(userId: string, input: { fullName?: string; email?: string; isActive?: boolean; password?: string }) {
