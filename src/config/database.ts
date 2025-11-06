@@ -1,31 +1,18 @@
 import { PrismaClient } from '@prisma/client';
 import { logger } from './logger';
 
-// Task 2 Compliant: PostgreSQL with encryption at rest
 export const prisma = new PrismaClient({
   log: [
-    {
-      emit: 'event',
-      level: 'query',
-    },
-    {
-      emit: 'event',
-      level: 'error',
-    },
-    {
-      emit: 'event',
-      level: 'info',
-    },
-    {
-      emit: 'event',
-      level: 'warn',
-    },
+    { emit: 'event', level: 'query' },
+    { emit: 'event', level: 'error' },
+    { emit: 'event', level: 'info' },
+    { emit: 'event', level: 'warn' },
   ],
 });
 
 // Log database queries in development
 if (process.env.NODE_ENV === 'development') {
-  prisma.$on('query', (e) => {
+  prisma.$on('query', (e: any) => {
     logger.debug('Database Query', {
       query: e.query,
       params: e.params,
@@ -34,31 +21,18 @@ if (process.env.NODE_ENV === 'development') {
   });
 }
 
-// Log database errors
-prisma.$on('error', (e) => {
-  logger.error('Database Error', {
-    error: e.message,
-    target: e.target,
-  });
+// Log database errors/info/warn
+prisma.$on('error', (e: any) => {
+  logger.error('Database Error', { error: e.message, target: e.target });
+});
+prisma.$on('info', (e: any) => {
+  logger.info('Database Info', { message: e.message, target: e.target });
+});
+prisma.$on('warn', (e: any) => {
+  logger.warn('Database Warning', { message: e.message, target: e.target });
 });
 
-// Log database info
-prisma.$on('info', (e) => {
-  logger.info('Database Info', {
-    message: e.message,
-    target: e.target,
-  });
-});
-
-// Log database warnings
-prisma.$on('warn', (e) => {
-  logger.warn('Database Warning', {
-    message: e.message,
-    target: e.target,
-  });
-});
-
-// Database connection management
+// Connection management
 export const connectDatabase = async (): Promise<void> => {
   try {
     await prisma.$connect();
@@ -79,11 +53,15 @@ export const disconnectDatabase = async (): Promise<void> => {
   }
 };
 
-// Health check for database
+// Health check (MongoDB)
 export const checkDatabaseHealth = async (): Promise<boolean> => {
   try {
-    await prisma.$queryRaw`SELECT 1`;
-    return true;
+    // Mongo: use runCommandRaw ping
+    // @ts-ignore - Prisma exposes this for Mongo
+    const result = await prisma.$runCommandRaw({ ping: 1 });
+    // Mongo returns { ok: 1 } on success
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    return !!result?.ok;
   } catch (error) {
     logger.error('Database health check failed', { error });
     return false;
@@ -93,7 +71,6 @@ export const checkDatabaseHealth = async (): Promise<boolean> => {
 // Graceful shutdown
 export const gracefulShutdown = async (): Promise<void> => {
   logger.info('Starting graceful shutdown...');
-  
   try {
     await disconnectDatabase();
     logger.info('Graceful shutdown completed');
@@ -106,4 +83,4 @@ export const gracefulShutdown = async (): Promise<void> => {
 // Handle process termination
 process.on('SIGINT', gracefulShutdown);
 process.on('SIGTERM', gracefulShutdown);
-process.on('SIGUSR2', gracefulShutdown); // For nodemon
+process.on('SIGUSR2', gracefulShutdown); // nodemon
