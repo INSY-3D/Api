@@ -1,5 +1,17 @@
 # 🏦 NexusPay API — Secure Payment Gateway
 
+# Members
+
+* Dean ST10326084
+* Matthew
+* Musa
+* Fortune 
+
+
+
+
+
+
 ### 📘 About This Project
 
 NexusPay API is a **Node.js backend service** that simulates a secure international payment system. It was built to meet **INSY3D Task 2 security requirements** and demonstrates industry-standard practices such as:
