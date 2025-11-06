@@ -83,7 +83,38 @@ cp env.example .env
 
 Then open `.env` and set your own values (like secrets, ports, etc.).
 
-### 🪜 Step 4 — Setup Database
+### 🪜 Step 4 — Generate SSL Certificates (REQUIRED)
+
+Follow the exact process in `SETUP_SSL_DEV.md`.
+
+```powershell
+# From node-API directory
+cd node-API
+npm run ssl:generate
+```
+
+The script will print the precise `.env` lines with ABSOLUTE PATHS, e.g.:
+
+```
+Add these to your .env file:
+
+# SSL/TLS Configuration (Development)
+TLS_CERT_PATH=C:\Users\musan\OneDrive - ADvTECH Ltd\Nexus\node-API\certs\server.pem
+TLS_KEY_PATH=C:\Users\musan\OneDrive - ADvTECH Ltd\Nexus\node-API\certs\server.key
+TLS_CA_PATH=C:\Users\musan\OneDrive - ADvTECH Ltd\Nexus\node-API\certs\server.pem
+```
+
+Copy those lines exactly into `node-API/.env` (absolute paths are required on Windows).
+
+Start the server and open:
+`https://localhost:5118/health`
+
+Your browser will warn about the self‑signed cert. For development, click:
+Advanced → Proceed to localhost (unsafe).
+
+More details and troubleshooting: `SETUP_SSL_DEV.md`.
+
+### 🪜 Step 5 — Setup Database
 
 ```bash
 # Generate Prisma client
@@ -96,7 +127,7 @@ npx prisma db push
 npm run db:seed
 ```
 
-### 🪜 Step 5 — Run the Server
+### 🪜 Step 6 — Run the Server
 
 ```bash
 # Start in development mode
@@ -107,12 +138,12 @@ npm run build
 npm start
 ```
 
-### 🪜 Step 6 — Test It Works
+### 🪜 Step 7 — Test It Works
 
 Check health endpoint:
 
 ```bash
-curl http://localhost:5118/health
+curl -k https://localhost:5118/health
 ```
 
 If setup was successful, you’ll see:
