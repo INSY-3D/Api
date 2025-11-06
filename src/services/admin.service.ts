@@ -119,7 +119,8 @@ class AdminService {
     // Generate secure random bytes and map to character set
     const randomValues = randomBytes(length);
     for (let i = 0; i < length; i++) {
-      out += chars[randomValues[i] % chars.length];
+      const byte = randomValues.readUInt8(i);
+      out += chars[byte % chars.length];
     }
     return out;
   }
