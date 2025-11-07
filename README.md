@@ -3,9 +3,9 @@
 # Members
 
 * Dean ST10326084
-* Matthew
+* Matthew ST10257002
 * Musa ST10293362
-* Fortune 
+* Fortune ST10187287
 
 
 
