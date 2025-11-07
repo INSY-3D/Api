@@ -126,7 +126,7 @@ Advanced → Proceed to localhost (unsafe).
 
 More details and troubleshooting: `SETUP_SSL_DEV.md`.
 
-### 🪜 Step 5 — Setup Database
+### 🪜 Step 5 — Setup Database (Admin Seed REQUIRED)
 
 ```bash
 # Generate Prisma client
@@ -135,7 +135,7 @@ npx prisma generate
 # Create and migrate database
 npx prisma db push
 
-# Optional: seed test data
+# REQUIRED: seed initial data (creates the single Admin account)
 npm run db:seed
 ```
 
@@ -278,12 +278,12 @@ Authorization: Bearer <staff_token>
 
 ## 🧪 Testing Credentials
 
-These are seeded for easy testing:
+These are seeded for easy testing (created by Step 5: db seed):
 
 ```
-Customer: customer@nexuspay.dev / Customer123!
-Staff:    staff@nexuspay.dev / Staff123!
-Admin:    admin@nexuspay.dev / Admin123!
+Customer: test@nexuspay.dev   / TestPass123!
+Staff:    staff@nexuspay.dev  / StaffPass123!
+Admin:    admin@nexuspay.dev  / AdminPass123!
 ```
 
 You can test using any API client (Postman, Insomnia, or `curl`).

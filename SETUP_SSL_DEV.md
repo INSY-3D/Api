@@ -94,13 +94,37 @@ curl -k https://localhost:5118/health
 
 ### "OpenSSL not found"
 
-**Fix:** Install OpenSSL:
-```powershell
-choco install openssl
-```
-Or download from: https://slproweb.com/products/Win32OpenSSL.html
+If the script reports OpenSSL is missing, install it using one of the options below, then re-run `npm run ssl:generate`.
 
-Then run `npm run ssl:generate` again.
+Option A — Chocolatey (Windows package manager)
+```powershell
+# Install Chocolatey if you don't have it
+Set-ExecutionPolicy Bypass -Scope Process -Force; \
+  [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; \
+  iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+# Install OpenSSL
+choco install openssl -y
+```
+
+Option B — Official OpenSSL Windows installer (no Chocolatey)
+1. Go to: https://slproweb.com/products/Win32OpenSSL.html
+2. Download the latest "Win64 OpenSSL" (Full) installer (e.g., Win64 OpenSSL v3.x Light/Full)
+3. Run the installer:
+   - When prompted, choose to install the OpenSSL DLLs to the Windows system directory
+   - Note the installation path (e.g., `C:\Program Files\OpenSSL-Win64`)
+4. Add OpenSSL to PATH (if the installer didn’t add it):
+   - Start → type "Environment Variables" → Edit the system environment variables
+   - Click "Environment Variables..."
+   - Under "System variables", select `Path` → Edit → New
+   - Add `C:\Program Files\OpenSSL-Win64\bin` (adjust if your path differs)
+   - Click OK on all dialogs
+5. Close and reopen PowerShell or your terminal so PATH changes take effect
+
+Now re-run:
+```powershell
+npm run ssl:generate
+```
 
 ---
 
