@@ -100,38 +100,46 @@ async function seed() {
     const testUser = await prisma.user.findFirst();
 
     if (testUser) {
-      // Create sample DRAFT payment
-      await prisma.payment.create({
-        data: {
-          userId: testUser.id,
-          amount: 1000.00,
-          currency: 'USD',
-          provider: 'SWIFT',
-          idempotencyKey: 'demo-payment-1',
-          status: 'draft',
-        },
-      });
+      // Create sample DRAFT payment (skip if already seeded)
+      const p1Key = 'demo-payment-1';
+      const existingP1 = await prisma.payment.findUnique({ where: { idempotencyKey: p1Key } });
+      if (!existingP1) {
+        await prisma.payment.create({
+          data: {
+            userId: testUser.id,
+            amount: 1000.00,
+            currency: 'USD',
+            provider: 'SWIFT',
+            idempotencyKey: p1Key,
+            status: 'draft',
+          },
+        });
+      }
 
-      // Create sample PENDING_VERIFICATION payment
-      await prisma.payment.create({
-        data: {
-          userId: testUser.id,
-          amount: 2500.00,
-          currency: 'EUR',
-          provider: 'SWIFT',
-          idempotencyKey: 'demo-payment-2',
-          status: 'pending_verification',
-          beneficiaryName: 'John Doe',
-          beneficiaryAccountNumber: '987654321',
-          swiftCode: 'CHASUS33XXX',
-          bankAddress: '123 Main St',
-          bankCity: 'New York',
-          bankPostalCode: '10001',
-          bankCountry: 'US',
-          reference: 'PAY-2025-001',
-          purpose: 'Business payment',
-        },
-      });
+      // Create sample PENDING_VERIFICATION payment (skip if already seeded)
+      const p2Key = 'demo-payment-2';
+      const existingP2 = await prisma.payment.findUnique({ where: { idempotencyKey: p2Key } });
+      if (!existingP2) {
+        await prisma.payment.create({
+          data: {
+            userId: testUser.id,
+            amount: 2500.00,
+            currency: 'EUR',
+            provider: 'SWIFT',
+            idempotencyKey: p2Key,
+            status: 'pending_verification',
+            beneficiaryName: 'John Doe',
+            beneficiaryAccountNumber: '987654321',
+            swiftCode: 'CHASUS33XXX',
+            bankAddress: '123 Main St',
+            bankCity: 'New York',
+            bankPostalCode: '10001',
+            bankCountry: 'US',
+            reference: 'PAY-2025-001',
+            purpose: 'Business payment',
+          },
+        });
+      }
 
       logger.info('Created sample payments for test user');
     }

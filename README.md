@@ -1,5 +1,20 @@
 # 🏦 NexusPay API — Secure Payment Gateway
 
+# 👥 Members
+
+
+| Name               | Student Number                       |
+| ------------------- | ------------------------------------ |
+| **Musa Ntuli**      | ST1029336                            |
+| **Dean Gibson**     | ST10326084                           |
+| **Fortune Mabona**  | ST10187287                           |
+| **Matthew Pieterse**| ST10257002                           |
+
+
+
+
+
+
 ### 📘 About This Project
 
 NexusPay API is a **Node.js backend service** that simulates a secure international payment system. It was built to meet **INSY3D Task 2 security requirements** and demonstrates industry-standard practices such as:
@@ -85,11 +100,15 @@ Then open `.env` and set your own values (like secrets, ports, etc.).
 
 ### 🪜 Step 4 — Generate SSL Certificates (REQUIRED)
 
-Follow the exact process in `SETUP_SSL_DEV.md`.
+> 🔐 **STOP HERE** — Do not continue until you have completed the dedicated SSL guide.
+
+
+[➡️ Open the full instructions (`SETUP_SSL_DEV.md`)](./SETUP_SSL_DEV.md)
+
+Once you’ve followed every step in that document:
 
 ```powershell
-# From node-API directory
-cd node-API
+# From API directory
 npm run ssl:generate
 ```
 
@@ -114,7 +133,7 @@ Advanced → Proceed to localhost (unsafe).
 
 More details and troubleshooting: `SETUP_SSL_DEV.md`.
 
-### 🪜 Step 5 — Setup Database
+### 🪜 Step 5 — Setup Database (Admin Seed REQUIRED)
 
 ```bash
 # Generate Prisma client
@@ -123,7 +142,7 @@ npx prisma generate
 # Create and migrate database
 npx prisma db push
 
-# Optional: seed test data
+# REQUIRED: seed initial data (creates the single Admin account)
 npm run db:seed
 ```
 
@@ -266,12 +285,12 @@ Authorization: Bearer <staff_token>
 
 ## 🧪 Testing Credentials
 
-These are seeded for easy testing:
+These are seeded for easy testing (created by Step 5: db seed):
 
 ```
-Customer: customer@nexuspay.dev / Customer123!
-Staff:    staff@nexuspay.dev / Staff123!
-Admin:    admin@nexuspay.dev / Admin123!
+Customer: test@nexuspay.dev   / TestPass123!
+Staff:    staff@nexuspay.dev  / StaffPass123!
+Admin:    admin@nexuspay.dev  / AdminPass123!
 ```
 
 You can test using any API client (Postman, Insomnia, or `curl`).
@@ -301,3 +320,18 @@ This project demonstrates:
 
 It can be cloned, installed, and tested in under 10 minutes.
 
+
+ --- 
+
+ ## Chnage Log
+
+Release Notes
+
+### Chores
+* Migrated database to MongoDB and updated connection/config variables
+* Converted entity identifiers/relations for MongoDB and added strategic indexes across accounts, sessions, payments, audits, security events, metrics, and OTPs
+* Added JWT refresh, encryption, and Argon2 configuration options
+* Improved DB health checks and query-duration logging
+
+### Documentation
+* Added a Members/Contributors section to the README
