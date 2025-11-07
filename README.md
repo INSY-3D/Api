@@ -1,11 +1,14 @@
 # 🏦 NexusPay API — Secure Payment Gateway
 
-# Members
+# 👥 Members
 
-* Dean ST10326084
-* Matthew ST10257002
-* Musa ST10293362
-* Fortune ST10187287
+
+| Nanme               | Student Number                       |
+| ------------------- | ------------------------------------ |
+| **Musa Ntuli**      | ST1029336                            |
+| **Dean Gibson**     | ST10326084                           |
+| **Fortune Mabona**  | ST10187287                           |
+| **Matthew Pieterse**| ST10257002                           |
 
 
 
