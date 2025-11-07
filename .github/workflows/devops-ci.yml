@@ -113,6 +113,53 @@ jobs:
           npm ci --prefer-offline --no-audit --no-fund
           npm run build
   
+
+  # Job
+  node-audit:
+    name: Audit
+    runs-on: ubuntu-latest
+    needs: node-build
+    if: always()
+    continue-on-error: true
+    timeout-minutes: 5
+    steps:
+
+      # Step
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      # Step
+      - name: Setup the NodeJs Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # Step
+      - name: Install DependenciesS
+        shell: bash
+        run: |
+          npm ci --prefer-offline --no-audit --no-fund
+
+      # Step
+      - name: Validate Dependencies
+        shell: bash
+        run: |
+          AUDIT_JSON=$(npm audit --json || true)
+
+          LEVEL_H=$(echo "$AUDIT_JSON" | jq '.metadata.vulnerabilities.high')
+          LEVEL_M=$(echo "$AUDIT_JSON" | jq '.metadata.vulnerabilities.moderate')
+          LEVEL_L=$(echo "$AUDIT_JSON" | jq '.metadata.vulnerabilities.low')
+          LEVEL_I=$(echo "$AUDIT_JSON" | jq '.metadata.vulnerabilities.info')
+          
+          echo "### Vulnerabilities (Audit)" >> $GITHUB_STEP_SUMMARY
+
+          TABLE="| High | Moderate | Low | Info |\n|:-:|:-:|:-:|:-:|\n| $LEVEL_H | $LEVEL_M | $LEVEL_L | $LEVEL_I |"
+          
+          echo -e "$TABLE" >> $GITHUB_STEP_SUMMARY
+  
   
   # Job
   node-tests:
