@@ -9,6 +9,7 @@ jobs:
   build:
     docker:
       - image: cimg/node:20.5
+    working_directory: ~/project
     steps:
       - run:
           name: Checkout code via HTTPS
