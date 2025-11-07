@@ -1,0 +1,27 @@
+version: 2.1
+
+
+orbs:
+  sonarcloud: sonarsource/sonarcloud@2.0.0
+
+
+jobs:
+  build:
+    docker:
+      - image: cimg/node:20.5
+    steps:
+      - checkout
+      - run:
+          name: Install Dependencies
+          command: npm install
+      - run:
+          name: Execute Tests
+          command: npm test --passWithNoTests
+      - sonarcloud/scan
+
+
+workflows:
+  main:
+    jobs:
+      - build:
+          context: SonarCloud
