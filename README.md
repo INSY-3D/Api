@@ -313,3 +313,18 @@ This project demonstrates:
 
 It can be cloned, installed, and tested in under 10 minutes.
 
+
+ --- 
+
+ ## Chnage Log
+
+Release Notes
+
+### Chores
+* Migrated database to MongoDB and updated connection/config variables
+* Converted entity identifiers/relations for MongoDB and added strategic indexes across accounts, sessions, payments, audits, security events, metrics, and OTPs
+* Added JWT refresh, encryption, and Argon2 configuration options
+* Improved DB health checks and query-duration logging
+
+### Documentation
+* Added a Members/Contributors section to the README
