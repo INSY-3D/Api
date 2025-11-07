@@ -1,5 +1,17 @@
 # 🏦 NexusPay API — Secure Payment Gateway
 
+# Members
+
+* Dean ST10326084
+* Matthew
+* Musa
+* Fortune 
+
+
+
+
+
+
 ### 📘 About This Project
 
 NexusPay API is a **Node.js backend service** that simulates a secure international payment system. It was built to meet **INSY3D Task 2 security requirements** and demonstrates industry-standard practices such as:
@@ -301,3 +313,18 @@ This project demonstrates:
 
 It can be cloned, installed, and tested in under 10 minutes.
 
+
+ --- 
+
+ ## Chnage Log
+
+Release Notes
+
+### Chores
+* Migrated database to MongoDB and updated connection/config variables
+* Converted entity identifiers/relations for MongoDB and added strategic indexes across accounts, sessions, payments, audits, security events, metrics, and OTPs
+* Added JWT refresh, encryption, and Argon2 configuration options
+* Improved DB health checks and query-duration logging
+
+### Documentation
+* Added a Members/Contributors section to the README
