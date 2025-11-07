@@ -97,11 +97,15 @@ Then open `.env` and set your own values (like secrets, ports, etc.).
 
 ### 🪜 Step 4 — Generate SSL Certificates (REQUIRED)
 
-Follow the exact process in `SETUP_SSL_DEV.md`.
+> 🔐 **STOP HERE** — Do not continue until you have completed the dedicated SSL guide.
+
+
+[➡️ Open the full instructions (`SETUP_SSL_DEV.md`)](./SETUP_SSL_DEV.md)
+
+Once you’ve followed every step in that document:
 
 ```powershell
-# From node-API directory
-cd node-API
+# From API directory
 npm run ssl:generate
 ```
 
