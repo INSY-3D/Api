@@ -3,7 +3,7 @@
 # 👥 Members
 
 
-| Nanme               | Student Number                       |
+| Name               | Student Number                       |
 | ------------------- | ------------------------------------ |
 | **Musa Ntuli**      | ST1029336                            |
 | **Dean Gibson**     | ST10326084                           |
