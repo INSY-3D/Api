@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Security Tests" tests="58" failures="0" errors="0" time="55.605">
+  <testsuite name="tests\security\injectionAttacks.test.ts" errors="0" failures="0" skipped="0" timestamp="2025-11-07T16:17:38" time="34.612" tests="9">
+    <testcase classname="Injection Attack Prevention › SQL Injection Prevention" name="should block SQL injection in login username" time="16.168">
+    </testcase>
+    <testcase classname="Injection Attack Prevention › SQL Injection Prevention" name="should block SQL injection in registration fields" time="0.043">
+    </testcase>
+    <testcase classname="Injection Attack Prevention › XSS Prevention" name="should sanitize XSS payloads in input fields" time="0.058">
+    </testcase>
+    <testcase classname="Injection Attack Prevention › XSS Prevention" name="should block XSS in URL parameters" time="0.036">
+    </testcase>
+    <testcase classname="Injection Attack Prevention › NoSQL Injection Prevention" name="should block NoSQL injection in request body" time="0.066">
+    </testcase>
+    <testcase classname="Injection Attack Prevention › NoSQL Injection Prevention" name="should block NoSQL injection in query parameters" time="0.007">
+    </testcase>
+    <testcase classname="Injection Attack Prevention › Command Injection Prevention" name="should block command injection in input fields" time="0.046">
+    </testcase>
+    <testcase classname="Injection Attack Prevention › Path Traversal Prevention" name="should block path traversal in file operations" time="0.051">
+    </testcase>
+    <testcase classname="Injection Attack Prevention › WAF Blocking" name="should return WAF_BLOCKED code for blocked requests" time="2.425">
+    </testcase>
+  </testsuite>
+  <testsuite name="tests\security\malformedPayloads.test.ts" errors="0" failures="0" skipped="0" timestamp="2025-11-07T16:18:13" time="15.729" tests="13">
+    <testcase classname="Malformed Payload Handling › Invalid JSON Handling" name="should reject malformed JSON" time="0.032">
+    </testcase>
+    <testcase classname="Malformed Payload Handling › Invalid JSON Handling" name="should reject incomplete JSON" time="0.01">
+    </testcase>
+    <testcase classname="Malformed Payload Handling › Invalid JSON Handling" name="should reject JSON with invalid encoding" time="0.011">
+    </testcase>
+    <testcase classname="Malformed Payload Handling › Type Confusion Attacks" name="should handle type coercion attempts" time="0.009">
+    </testcase>
+    <testcase classname="Malformed Payload Handling › Type Confusion Attacks" name="should handle null/undefined injection" time="0.012">
+    </testcase>
+    <testcase classname="Malformed Payload Handling › Type Confusion Attacks" name="should handle array instead of string" time="0.01">
+    </testcase>
+    <testcase classname="Malformed Payload Handling › Type Confusion Attacks" name="should handle object instead of string" time="0.008">
+    </testcase>
+    <testcase classname="Malformed Payload Handling › Prototype Pollution Prevention" name="should prevent prototype pollution in request body" time="11.845">
+    </testcase>
+    <testcase classname="Malformed Payload Handling › Prototype Pollution Prevention" name="should prevent constructor pollution" time="1.614">
+    </testcase>
+    <testcase classname="Malformed Payload Handling › Oversized Payloads" name="should reject payloads with excessive nesting" time="1.509">
+    </testcase>
+    <testcase classname="Malformed Payload Handling › Content-Type Validation" name="should reject requests with wrong Content-Type" time="0.017">
+    </testcase>
+    <testcase classname="Malformed Payload Handling › Special Character Handling" name="should handle unicode injection attempts" time="0.03">
+    </testcase>
+    <testcase classname="Malformed Payload Handling › Special Character Handling" name="should handle emoji and special unicode" time="0.014">
+    </testcase>
+  </testsuite>
+  <testsuite name="tests\security\errorLeakage.test.ts" errors="0" failures="0" skipped="0" timestamp="2025-11-07T16:17:38" time="51.4" tests="7">
+    <testcase classname="Error Leakage Prevention › Database Error Handling" name="should not expose database errors to clients" time="0.154">
+    </testcase>
+    <testcase classname="Error Leakage Prevention › Database Error Handling" name="should not expose stack traces in production" time="0.021">
+    </testcase>
+    <testcase classname="Error Leakage Prevention › System Information Leakage" name="should not expose server version information" time="0.034">
+    </testcase>
+    <testcase classname="Error Leakage Prevention › System Information Leakage" name="should not expose file paths in error messages" time="0.025">
+    </testcase>
+    <testcase classname="Error Leakage Prevention › Authentication Error Messages" name="should not reveal whether username exists" time="5.438">
+    </testcase>
+    <testcase classname="Error Leakage Prevention › Authentication Error Messages" name="should not reveal password validation details" time="2.578">
+    </testcase>
+    <testcase classname="Error Leakage Prevention › Rate Limit Error Messages" name="should not expose rate limit implementation details" time="27.903">
+    </testcase>
+  </testsuite>
+  <testsuite name="tests\security\rateLimiting.test.ts" errors="0" failures="0" skipped="0" timestamp="2025-11-07T16:18:29" time="2.15" tests="5">
+    <testcase classname="Rate Limiting › General API Rate Limiting" name="should rate limit excessive API requests" time="1.162">
+    </testcase>
+    <testcase classname="Rate Limiting › Login Endpoint Rate Limiting" name="should enforce rate limits on login endpoint" time="0.009">
+    </testcase>
+    <testcase classname="Rate Limiting › Registration Endpoint Rate Limiting" name="should enforce rate limits on registration endpoint" time="0.009">
+    </testcase>
+    <testcase classname="Rate Limiting › WAF Rate Limiting" name="should rate limit requests that trigger WAF rules" time="0.014">
+    </testcase>
+    <testcase classname="Rate Limiting › Rate Limit Reset" name="should reset rate limit after window expires" time="0.009">
+    </testcase>
+  </testsuite>
+  <testsuite name="tests\security\authentication.test.ts" errors="0" failures="0" skipped="0" timestamp="2025-11-07T16:18:30" time="1.382" tests="13">
+    <testcase classname="Authentication Security › Token Validation" name="should reject requests without authentication token" time="0.022">
+    </testcase>
+    <testcase classname="Authentication Security › Token Validation" name="should reject requests with invalid token format" time="0.031">
+    </testcase>
+    <testcase classname="Authentication Security › Token Validation" name="should reject requests with malformed token" time="0.016">
+    </testcase>
+    <testcase classname="Authentication Security › Token Validation" name="should reject expired tokens" time="0.014">
+    </testcase>
+    <testcase classname="Authentication Security › Token Validation" name="should reject tampered tokens" time="0.035">
+    </testcase>
+    <testcase classname="Authentication Security › Role-Based Access Control (RBAC)" name="should enforce customer-only endpoints" time="0.011">
+    </testcase>
+    <testcase classname="Authentication Security › Session Management" name="should reject requests with invalid session" time="0.014">
+    </testcase>
+    <testcase classname="Authentication Security › Session Management" name="should reject requests with expired session" time="0.021">
+    </testcase>
+    <testcase classname="Authentication Security › Authentication Bypass Prevention" name="should not allow authentication bypass via empty token" time="0.011">
+    </testcase>
+    <testcase classname="Authentication Security › Authentication Bypass Prevention" name="should not allow authentication bypass via SQL injection in token" time="0.008">
+    </testcase>
+    <testcase classname="Authentication Security › Authentication Bypass Prevention" name="should not expose user information in error messages" time="0.011">
+    </testcase>
+    <testcase classname="Authentication Security › Token Refresh Security" name="should require valid refresh token" time="0.024">
+    </testcase>
+    <testcase classname="Authentication Security › Token Refresh Security" name="should reject expired refresh tokens" time="0.016">
+    </testcase>
+  </testsuite>
+  <testsuite name="tests\security\cors.test.ts" errors="0" failures="0" skipped="0" timestamp="2025-11-07T16:18:31" time="0.656" tests="8">
+    <testcase classname="CORS Security › CORS Preflight Requests" name="should handle OPTIONS preflight requests" time="0.006">
+    </testcase>
+    <testcase classname="CORS Security › CORS Preflight Requests" name="should include CORS headers in preflight response" time="0.005">
+    </testcase>
+    <testcase classname="CORS Security › CORS Origin Whitelisting" name="should allow requests from whitelisted origins" time="0.012">
+    </testcase>
+    <testcase classname="CORS Security › CORS Origin Whitelisting" name="should reject requests from non-whitelisted origins" time="0.017">
+    </testcase>
+    <testcase classname="CORS Security › CORS Header Exposure" name="should not expose sensitive headers" time="0.022">
+    </testcase>
+    <testcase classname="CORS Security › CORS Header Exposure" name="should only expose necessary headers" time="0.008">
+    </testcase>
+    <testcase classname="CORS Security › CORS Credentials" name="should handle credentials in CORS requests" time="0.014">
+    </testcase>
+    <testcase classname="CORS Security › CORS Method Restrictions" name="should only allow specified HTTP methods" time="0.008">
+    </testcase>
+  </testsuite>
+  <testsuite name="tests\security\bruteForce.test.ts" errors="0" failures="0" skipped="0" timestamp="2025-11-07T16:17:38" time="53.607" tests="3">
+    <testcase classname="Brute Force Protection › Login Rate Limiting" name="should allow normal login attempts" time="5.654">
+    </testcase>
+    <testcase classname="Brute Force Protection › Login Rate Limiting" name="should return rate limit headers" time="17.35">
+    </testcase>
+    <testcase classname="Brute Force Protection › Account Lockout" name="should lock account after multiple failed login attempts" time="15.665">
+    </testcase>
+  </testsuite>
+</testsuites>
