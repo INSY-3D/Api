@@ -266,36 +266,44 @@ class NexusPayServer {
   }
 }
 
-// Create and start server
-const server = new NexusPayServer();
+// Export class for testing
+export { NexusPayServer };
 
-// Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
-  logger.error('Uncaught Exception', { error });
-  process.exit(1);
-});
+// Only start server if not in test mode
+let defaultServer: NexusPayServer | null = null;
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (reason, promise) => {
-  logger.error('Unhandled Rejection', { reason, promise });
-  process.exit(1);
-});
+if (process.env.NODE_ENV !== 'test' && !process.env.JEST_WORKER_ID) {
+  // Create and start server
+  defaultServer = new NexusPayServer();
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  logger.info('SIGTERM received, shutting down gracefully');
-  process.exit(0);
-});
+  // Handle uncaught exceptions
+  process.on('uncaughtException', (error) => {
+    logger.error('Uncaught Exception', { error });
+    process.exit(1);
+  });
 
-process.on('SIGINT', () => {
-  logger.info('SIGINT received, shutting down gracefully');
-  process.exit(0);
-});
+  // Handle unhandled promise rejections
+  process.on('unhandledRejection', (reason, promise) => {
+    logger.error('Unhandled Rejection', { reason, promise });
+    process.exit(1);
+  });
 
-// Start the server
-server.start().catch((error) => {
-  logger.error('Server startup failed', { error });
-  process.exit(1);
-});
+  // Graceful shutdown
+  process.on('SIGTERM', () => {
+    logger.info('SIGTERM received, shutting down gracefully');
+    process.exit(0);
+  });
 
-export default server;
+  process.on('SIGINT', () => {
+    logger.info('SIGINT received, shutting down gracefully');
+    process.exit(0);
+  });
+
+  // Start the server
+  defaultServer.start().catch((error) => {
+    logger.error('Server startup failed', { error });
+    process.exit(1);
+  });
+}
+
+export default defaultServer;
