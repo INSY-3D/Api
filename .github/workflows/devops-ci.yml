@@ -53,16 +53,43 @@ jobs:
             echo "  - refs/tags/vX.Y.Z (semantic version tags)            "
             exit 1
           fi
-  
+
+
+  # Job
+  security:
+    name: Dependency Scanner
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    continue-on-error: true
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+
+      # Step
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      # Step
+      - name: VCS Scan
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+
 
   # Job
   node-build:
     name: Build
     runs-on: ubuntu-latest
-    needs: validate
+    needs: [ validate, security ]
     if: |
-      needs.validate.result == 'success' || 
-      github.event_name == 'pull_request'
+      always() && (
+        needs.validate.result == 'success' ||
+        github.event_name == 'pull_request'
+      )
     timeout-minutes: 5
     steps:
 
@@ -86,15 +113,17 @@ jobs:
           npm ci --prefer-offline --no-audit --no-fund
           npm run build
   
-
+  
   # Job
   node-tests:
     name: Tests (NodeJs ${{ matrix.node-version }})
     runs-on: ubuntu-latest
-    needs: validate
+    needs: [ validate, security ]
     if: |
-      needs.validate.result == 'success' || 
-      github.event_name == 'pull_request'
+      always() && (
+        needs.validate.result == 'success' ||
+        github.event_name == 'pull_request'
+      )
     strategy:
       fail-fast: false
       matrix:
